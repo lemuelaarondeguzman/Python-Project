@@ -1,0 +1,74 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Archived Surveys - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-archive"></i> Archived Surveys</h2>
+            <p class="text-muted">View and manage your archived surveys.</p>
+        </div>
+        <a href="{% url 'manage_surveys' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Survey Builder
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-archive"></i> Archived Surveys</h5>
+        <span class="badge bg-secondary">{{ archived_surveys.count }} archived</span>
+    </div>
+    <div class="card-body">
+        {% if archived_surveys %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Archived On</th>
+                        <th>Responses</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for survey in archived_surveys %}
+                    <tr>
+                        <td>{{ survey.title }}</td>
+                        <td>{{ survey.description|truncatechars:60 }}</td>
+                        <td>{{ survey.updated_at|date:"M d, Y h:i A" }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ survey.responses.count }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                <form action="{% url 'restore_survey' survey.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success" title="Restore Survey">
+                                        <i class="fas fa-undo"></i> Restore
+                                    </button>
+                                </form>
+                                <a href="{% url 'delete_survey' survey.id %}" class="btn btn-sm btn-outline-danger" title="Delete Permanently">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-archive fa-4x text-muted mb-3"></i>
+            <h5>No archived surveys</h5>
+            <p class="text-muted">Archived surveys will appear here.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+

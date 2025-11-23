@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Survey System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2><i class="fas fa-tachometer-alt"></i> Student Dashboard</h2>
+        <p class="text-muted">Welcome, {{ user.first_name }}! 
+            {% if user.profile.section %}
+                You are in section: <strong>{{ user.profile.section.name }}</strong>
+            {% else %}
+                You are not assigned to any section yet. Please contact your teacher for assistance.
+            {% endif %}
+        </p>
+        
+        {% if not has_available_surveys and surveys %}
+        <div class="text-center py-4" id="no-surveys-notification">
+            <p class="text-muted mb-0">
+                <i class="fas fa-info-circle"></i> No surveys available for you to answer at the moment.
+            </p>
+        </div>
+        {% endif %}
+        
+        {% if surveys %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Assigned Surveys
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Survey Title</th>
+                                <th>Description</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="surveys-table-body">
+                            {% for survey in surveys %}
+                            <tr data-survey-id="{{ survey.id }}" 
+                                data-due-date="{{ survey.due_date|date:'c' }}"
+                                {% if survey.open_time %}data-open-time="{{ survey.open_time|date:'c' }}"{% endif %}>
+                                <td>{{ survey.title }}</td>
+                                <td>{{ survey.description|truncatechars:50 }}</td>
+                                <td>{{ survey.due_date|date:"M d, Y h:i A" }}</td>
+                                <td class="survey-status-cell">
+                                    {% if survey.is_open %}
+                                        <span class="badge bg-success">Open</span>
+                                    {% elif survey.open_time %}
+                                        <span class="badge bg-warning">Scheduled</span>
+                                        <small class="text-muted d-block">Opens: {{ survey.open_time|date:"M d, Y h:i A" }}</small>
+                                    {% else %}
+                                        <span class="badge bg-danger">Closed</span>
+                                    {% endif %}
+                                </td>
+                                <td class="survey-action-cell">
+                                    {% if survey.id in responded_survey_ids %}
+                                        <span class="badge bg-info">Completed</span>
+                                    {% elif survey.is_open %}
+                                        <a href="{% url 'take_survey' survey.id %}" class="btn btn-sm btn-primary take-survey-btn">
+                                            <i class="fas fa-play"></i> Take Survey
+                                        </a>
+                                    {% elif survey.open_time %}
+                                        <span class="badge bg-secondary">Not Available Yet</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Closed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-4" id="no-surveys-notification">
+            <p class="text-muted mb-0">
+                <i class="fas fa-info-circle"></i> No surveys available for you to answer at the moment.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history"></i> Response History
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if responses %}
+                <div class="list-group">
+                    {% for response in responses %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ response.survey.title }}</h6>
+                            <small>{{ response.submitted_at|date:"M d" }}</small>
+                        </div>
+                        <p class="mb-1">{{ response.survey.description|truncatechars:50 }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No responses yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Real-time survey status update - updates survey status and handles scheduled opening
+// Updates automatically without page refresh
+document.addEventListener('DOMContentLoaded', function() {
+    function updateSurveyStatuses() {
+        const rows = document.querySelectorAll('#surveys-table-body tr[data-survey-id]');
+        // Get current time (JavaScript Date compares UTC automatically)
+        const now = new Date();
+        let hasVisibleSurveys = false;
+        
+        let hasAvailableSurveys = false;
+        
+        rows.forEach(function(row) {
+            const dueDateStr = row.getAttribute('data-due-date');
+            const openTimeStr = row.getAttribute('data-open-time');
+            if (!dueDateStr) return;
+            
+            // Parse ISO 8601 date strings (already in UTC from server)
+            const dueDate = new Date(dueDateStr);
+            const openTime = openTimeStr ? new Date(openTimeStr) : null;
+            
+            // Check if survey is closed (due date has passed)
+            const isClosed = now > dueDate;
+            
+            // Check if survey is open (past open_time if set, and before due_date)
+            let isOpen = false;
+            if (!isClosed) {
+                if (openTime) {
+                    isOpen = now >= openTime;
+                } else {
+                    isOpen = true; // No open_time set, so it's open if not closed
+                }
+            }
+            
+            // Update status badge
+            const statusCell = row.querySelector('.survey-status-cell');
+            const actionCell = row.querySelector('.survey-action-cell');
+            
+            if (isClosed) {
+                // Survey is closed - hide the row
+                row.style.display = 'none';
+            } else {
+                // Survey is visible - update status and action
+                row.style.display = '';
+                hasVisibleSurveys = true;
+                
+                // Check if this survey is available to answer (open and not completed)
+                const isCompleted = actionCell && actionCell.querySelector('.badge.bg-info');
+                if (isOpen && !isCompleted) {
+                    hasAvailableSurveys = true;
+                }
+                
+                // Update status badge
+                if (statusCell) {
+                    if (isOpen) {
+                        statusCell.innerHTML = '<span class="badge bg-success">Open</span>';
+                    } else if (openTime) {
+                        const openTimeFormatted = openTime.toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        statusCell.innerHTML = '<span class="badge bg-warning">Scheduled</span><small class="text-muted d-block">Opens: ' + openTimeFormatted + '</small>';
+                    }
+                }
+                
+                // Update action button
+                if (actionCell) {
+                    const surveyId = row.getAttribute('data-survey-id');
+                    const responded = actionCell.querySelector('.badge.bg-info');
+                    
+                    if (responded) {
+                        // Already responded - keep as is
+                    } else if (isOpen) {
+                        // Survey is open - show take survey button
+                        actionCell.innerHTML = '<a href="/student/survey/' + surveyId + '/" class="btn btn-sm btn-primary take-survey-btn"><i class="fas fa-play"></i> Take Survey</a>';
+                    } else if (openTime) {
+                        // Survey not yet open - show not available message
+                        actionCell.innerHTML = '<span class="badge bg-secondary">Not Available Yet</span>';
+                    }
+                }
+            }
+        });
+        
+        // Remove "no surveys" message if it exists and we have visible surveys
+        const existingMessage = document.querySelector('.no-surveys-message');
+        if (hasVisibleSurveys && existingMessage) {
+            existingMessage.remove();
+        }
+        
+        // Show message if all surveys are closed
+        if (!hasVisibleSurveys && !existingMessage) {
+            const tableBody = document.getElementById('surveys-table-body');
+            if (tableBody) {
+                const messageRow = document.createElement('tr');
+                messageRow.className = 'no-surveys-message';
+                messageRow.innerHTML = '<td colspan="5" class="text-center"><div class="alert alert-info mb-0"><i class="fas fa-info-circle"></i> No surveys available at the moment.</div></td>';
+                tableBody.appendChild(messageRow);
+            }
+        }
+        
+        // Show/hide the "no surveys available" notification based on available surveys
+        const noSurveysNotification = document.getElementById('no-surveys-notification');
+        if (noSurveysNotification) {
+            if (hasAvailableSurveys) {
+                // Hide notification if there are available surveys
+                noSurveysNotification.style.display = 'none';
+            } else {
+                // Show notification if no available surveys
+                noSurveysNotification.style.display = 'block';
+            }
+        }
+    }
+    
+    // Update status immediately on page load
+    updateSurveyStatuses();
+    
+    // Update status every 30 seconds for real-time updates
+    // This ensures surveys open automatically when scheduled time arrives
+    setInterval(updateSurveyStatuses, 30000);
+});
+</script>
+{% endblock %}

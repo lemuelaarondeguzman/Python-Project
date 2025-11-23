@@ -1,0 +1,241 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Response Management: {{ survey.title }} - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-eye"></i> Response Management: {{ survey.title }}</h2>
+            <p class="text-muted">View and manage individual student responses.</p>
+        </div>
+        <button onclick="history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        
+        <!-- Search and Filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-muted text-uppercase small">Student</label>
+                        <input type="text" class="form-control" name="search" 
+                               placeholder="Search by student name..." 
+                               value="{{ search_query|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold text-muted text-uppercase small">Submitted Date</label>
+                        <input type="date" class="form-control" name="submitted_date" value="{{ selected_date|default:'' }}">
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="fas fa-filter"></i> Apply
+                        </button>
+                        {% if search_query or selected_date %}
+                        <a href="{% url 'response_management' survey.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Responses Table -->
+        {% if page_obj %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Student Responses 
+                    <span class="badge bg-primary">{{ page_obj.paginator.count }} total</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Email</th>
+                                <th>Submitted At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for response in page_obj %}
+                            <tr>
+                                <td>
+                                    <strong>{{ response.student.first_name }} {{ response.student.last_name }}</strong>
+                                    <br><small class="text-muted">{{ response.student.username }}</small>
+                                </td>
+                                <td>{{ response.student.email }}</td>
+                                <td>{{ response.submitted_at|date:"M d, Y h:i A" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary view-details-btn" 
+                                            data-response-id="{{ response.id }}"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#responseDetailsModal">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_date %}&submitted_date={{ selected_date }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_date %}&submitted_date={{ selected_date }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_date %}&submitted_date={{ selected_date }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_date %}&submitted_date={{ selected_date }}{% endif %}">Last</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No responses found.
+            {% if search_query %}
+                Try adjusting your search criteria.
+            {% else %}
+                Students haven't submitted responses yet.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Response Details Modal -->
+<div class="modal fade" id="responseDetailsModal" tabindex="-1" aria-labelledby="responseDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="responseDetailsModalLabel">
+                    <i class="fas fa-clipboard-list"></i> Response Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="responseDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text ? String(text).replace(/[&<>"']/g, m => map[m]) : '';
+    }
+    
+    const viewDetailsButtons = document.querySelectorAll('.view-details-btn');
+    const modal = document.getElementById('responseDetailsModal');
+    const modalContent = document.getElementById('responseDetailsContent');
+    
+    viewDetailsButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const responseId = this.getAttribute('data-response-id');
+            
+            // Show loading spinner
+            modalContent.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            
+            // Fetch response details
+            fetch(`/teacher/response/${responseId}/details/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        modalContent.innerHTML = '<div class="alert alert-danger">' + escapeHtml(data.error) + '</div>';
+                        return;
+                    }
+                    
+                    // Build the details HTML
+                    let html = '<div class="mb-3">' +
+                        '<h6 class="text-muted mb-2">Student Information</h6>' +
+                        '<p class="mb-1"><strong>Name:</strong> ' + escapeHtml(data.student.name) + '</p>' +
+                        '<p class="mb-1"><strong>Username:</strong> ' + escapeHtml(data.student.username) + '</p>' +
+                        '<p class="mb-1"><strong>Email:</strong> ' + escapeHtml(data.student.email) + '</p>' +
+                        '</div>' +
+                        '<div class="mb-3">' +
+                        '<h6 class="text-muted mb-2">Survey Information</h6>' +
+                        '<p class="mb-1"><strong>Survey:</strong> ' + escapeHtml(data.survey.title) + '</p>' +
+                        '<p class="mb-1"><strong>Submitted:</strong> ' + escapeHtml(data.survey.submitted_at) + '</p>' +
+                        '</div>' +
+                        '<hr>' +
+                        '<div>' +
+                        '<h6 class="text-muted mb-3">Answers</h6>' +
+                        '<div class="list-group">';
+                    
+                    if (data.answers.length === 0) {
+                        html += '<div class="list-group-item"><p class="text-muted mb-0">No answers found.</p></div>';
+                    } else {
+                        data.answers.forEach(function(answer, index) {
+                            const answerText = answer.answer || '<em class="text-muted">No answer provided</em>';
+                            html += '<div class="list-group-item mb-2">' +
+                                '<h6 class="mb-2">' + (index + 1) + '. ' + escapeHtml(answer.question) + '</h6>' +
+                                '<p class="mb-1"><small class="text-muted">Type: ' + escapeHtml(answer.question_type) + '</small></p>' +
+                                '<p class="mb-0"><strong>Answer:</strong> ' + (answer.answer ? escapeHtml(answer.answer) : '<em class="text-muted">No answer provided</em>') + '</p>' +
+                                '</div>';
+                        });
+                    }
+                    
+                    html += '</div></div>';
+                    
+                    modalContent.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalContent.innerHTML = '<div class="alert alert-danger">An error occurred while loading response details.</div>';
+                });
+        });
+    });
+    
+    // Clear modal content when modal is hidden
+    modal.addEventListener('hidden.bs.modal', function() {
+        modalContent.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+    });
+});
+</script>
+
+{% endblock %}

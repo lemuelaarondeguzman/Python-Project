@@ -1,0 +1,90 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Pending Section Requests - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-user-clock"></i> Pending Section Requests</h2>
+    <p class="text-muted">Review and approve or reject student requests to join sections.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+
+        {% if pending_requests %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Pending Requests
+                    <span class="badge bg-warning text-dark">{{ pending_requests.count }} pending</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Requested Section</th>
+                                <th>Requested At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in pending_requests %}
+                            <tr>
+                                <td>
+                                    <strong>{{ request.student.first_name }} {{ request.student.last_name }}</strong>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@{{ request.student.username }}</small>
+                                </td>
+                                <td>{{ request.student.email }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ request.section.name }}</span>
+                                    {% if request.section.description %}
+                                    <br><small class="text-muted">{{ request.section.description }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ request.requested_at|date:"M d, Y h:i A" }}</small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <form method="post" action="{% url 'approve_section_request' request.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success" title="Approve Request">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'reject_section_request' request.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Reject Request" onclick="return confirm('Are you sure you want to reject this request?');">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h5>No Pending Requests</h5>
+                <p class="text-muted">All section requests have been processed.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+

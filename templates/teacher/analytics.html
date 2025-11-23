@@ -1,0 +1,323 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Analytics: {{ survey.title }} - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-chart-bar"></i> Analytics: {{ survey.title }}</h2>
+    <p class="text-muted">View survey analytics and response visualizations.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        
+        <!-- Survey Summary -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ questions.count }}</h4>
+                        <p class="mb-0">Questions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ survey.responses.count }}</h4>
+                        <p class="mb-0">Responses</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ survey.assigned_sections.count }}</h4>
+                        <p class="mb-0">Sections</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ survey.due_date|date:"M d" }}</h4>
+                        <p class="mb-0">Due Date</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Charts -->
+        {% if questions %}
+        <div class="row">
+            {% for question in questions %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            {{ forloop.counter }}. {{ question.question_text|truncatechars:50 }}
+                        </h6>
+                        <small class="text-muted">{{ question.get_question_type_display }}</small>
+                    </div>
+                    <div class="card-body">
+                        {% if question.question_type == 'multiple_choice' %}
+                            <canvas id="chart_{{ question.id }}" width="400" height="200"></canvas>
+                        
+                        {% elif question.question_type == 'likert_scale' %}
+                            <canvas id="chart_{{ question.id }}" width="400" height="200"></canvas>
+                        
+                        {% elif question.question_type == 'short_answer' %}
+                            <div class="word-cloud-section">
+                                <div id="word-cloud-{{ question.id }}" class="word-cloud-container text-muted">
+                                    Loading responses...
+                                </div>
+                                <small class="text-muted d-block mt-2">Word cloud generated from student responses.</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No questions found in this survey.
+        </div>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="text-center mt-4">
+            <a href="{% url 'edit_survey' survey.id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-edit"></i> Edit Survey
+            </a>
+            <a href="{% url 'manage_surveys' %}" class="btn btn-outline-dark">
+                <i class="fas fa-arrow-left"></i> Back to Survey Builder
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for Chart.js to be fully loaded
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded');
+        return;
+    }
+    
+    const analyticsData = {{ analytics_data|safe }};
+    console.log('Analytics Data:', analyticsData);
+    
+    // Initialize charts for each question
+    {% for question in questions %}
+    {% if question.question_type == 'multiple_choice' or question.question_type == 'likert_scale' %}
+    (function() {
+        const questionId = {{ question.id }};
+        const canvasId = 'chart_' + questionId;
+        const canvas = document.getElementById(canvasId);
+        
+        if (!canvas) {
+            console.error('Canvas not found for question ' + questionId);
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        const questionData = analyticsData[questionId];
+        
+        if (!questionData || !questionData.data || Object.keys(questionData.data).length === 0) {
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
+            return;
+        }
+        
+        {% if question.question_type == 'multiple_choice' %}
+        // Multiple Choice Pie Chart
+        const labels = Object.keys(questionData.data);
+        const values = Object.values(questionData.data);
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'];
+        
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, labels.length)
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% elif question.question_type == 'likert_scale' %}
+        // Likert Scale Bar Chart
+        const numericLabels = Object.keys(questionData.data).sort((a, b) => parseInt(a) - parseInt(b));
+        const values = numericLabels.map(key => questionData.data[key]);
+        
+        // Use custom labels if available, otherwise use numbers
+        let displayLabels = numericLabels;
+        if (questionData.likert_labels && questionData.likert_labels.length > 0) {
+            // Map numeric values to custom labels
+            displayLabels = numericLabels.map(num => {
+                const index = parseInt(num) - (questionData.likert_min || 1);
+                if (index >= 0 && index < questionData.likert_labels.length) {
+                    return `${num} (${questionData.likert_labels[index]})`;
+                }
+                return num;
+            });
+        }
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: displayLabels,
+                datasets: [{
+                    label: 'Responses',
+                    data: values,
+                    backgroundColor: '#36A2EB',
+                    borderColor: '#36A2EB',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        {% endif %}
+    })();
+    {% endif %}
+    {% endfor %}
+    
+    const STOP_WORDS = new Set([
+        'the','and','for','with','that','this','from','have','has','had','you','your','are','was','were','will',
+        'would','could','should','about','into','their','there','they','them','his','her','him','she','who','what',
+        'when','where','why','how','all','any','can','just','than','then','out','over','under','again','once','only',
+        'also','very','more','most','some','such','other','do','does','did','been','being','because','while','during',
+        'each','few','own','same','so','too','two','three','four','five','six','seven','eight','nine','ten','i','me',
+        'we','us','our','ours','my','mine','it','its','is','of','on','in','to','at','as','by','an','a','be'
+    ]);
+
+    function tokenize(text) {
+        return text
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .filter(word => word.length > 2 && !STOP_WORDS.has(word));
+    }
+
+    function buildWordCloud(questionId, responses) {
+        const container = document.getElementById('word-cloud-' + questionId);
+        if (!container) {
+            return;
+        }
+
+        if (!responses || responses.length === 0) {
+            container.textContent = 'No text responses yet.';
+            container.classList.add('text-muted');
+            return;
+        }
+
+        // Count word frequency - each response represents a student answer
+        // Words that appear in multiple student responses will have higher counts
+        const frequencyMap = {};
+        responses.forEach(response => {
+            tokenize(response).forEach(word => {
+                frequencyMap[word] = (frequencyMap[word] || 0) + 1;
+            });
+        });
+
+        const entries = Object.entries(frequencyMap).sort((a, b) => b[1] - a[1]);
+        if (entries.length === 0) {
+            container.textContent = 'Not enough data to generate a word cloud.';
+            container.classList.add('text-muted');
+            return;
+        }
+
+        container.innerHTML = '';
+        container.classList.remove('text-muted');
+
+        const maxFrequency = entries[0][1];
+        const minFrequency = entries[entries.length - 1][1];
+        
+        // Enhanced size scaling: words answered by more students are significantly bigger
+        // Size range: 0.9rem (min) to 3.2rem (max) for better visual distinction
+        const minFontSize = 0.9;
+        const maxFontSize = 3.2;
+        const fontSizeRange = maxFontSize - minFontSize;
+
+        const wordElements = entries.slice(0, 60).map(([word, count]) => {
+            const span = document.createElement('span');
+            
+            // Calculate weight based on frequency (how many students used this word)
+            const weight = maxFrequency > minFrequency 
+                ? (count - minFrequency) / (maxFrequency - minFrequency)
+                : 1;
+            
+            // Font size scales with frequency - more students = bigger word
+            // Only size varies, all other styling remains consistent
+            const fontSize = minFontSize + (weight * fontSizeRange);
+            
+            span.textContent = word;
+            span.className = 'word-cloud-word';
+            span.style.fontSize = fontSize.toFixed(2) + 'rem';
+            
+            // Consistent styling for all words - same color, opacity, and font weight
+            // Only size varies based on frequency
+            
+            // Add tooltip showing how many students used this word
+            span.title = `Used by ${count} student${count !== 1 ? 's' : ''}`;
+            span.style.cursor = 'help';
+            
+            // Randomize order for visual appeal
+            span.style.order = Math.round(Math.random() * 100);
+            return span;
+        });
+
+        const fragment = document.createDocumentFragment();
+        wordElements.forEach(el => fragment.appendChild(el));
+        container.appendChild(fragment);
+    }
+
+    Object.keys(analyticsData).forEach(questionId => {
+        const questionData = analyticsData[questionId];
+        if (questionData && questionData.type === 'short_answer') {
+            buildWordCloud(questionId, questionData.data || []);
+        }
+    });
+});
+</script>
+{% endblock %}

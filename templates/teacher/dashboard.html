@@ -1,0 +1,507 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Teacher Dashboard - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="mb-2" style="color: #003049; font-weight: 700;"><i class="fas fa-chart-line me-2" style="color: #669BBC;"></i> Dashboard</h2>
+            <p class="text-muted mb-1">Welcome back, <strong style="color: #003049;">{{ user.first_name }}</strong>! Here's your overview.</p>
+            <p class="mb-0" style="color: #669BBC; font-size: 0.9rem;">
+                <i class="fas fa-clock me-1"></i>
+                <span id="current-datetime"></span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Quick Stats -->
+<div class="row mb-5 g-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white shadow-sm" style="background: #003049; border-radius: 12px; border: none;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-2" style="font-size: 0.875rem; font-weight: 500; color: rgba(255,255,255,0.8);">Total Surveys</p>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700; color: #ffffff;">{{ total_surveys }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-poll fa-3x" style="color: rgba(255,255,255,0.2);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white shadow-sm" style="background: #669BBC; border-radius: 12px; border: none;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-2" style="font-size: 0.875rem; font-weight: 500; color: rgba(255,255,255,0.9);">Total Responses</p>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700; color: #ffffff;">{{ total_responses }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-users fa-3x" style="color: rgba(255,255,255,0.25);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card shadow-sm" style="background: #FDF0D5; border-radius: 12px; border: 2px solid #669BBC;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-2" style="font-size: 0.875rem; font-weight: 600; color: #003049;">Open Surveys</p>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700; color: #003049;">{{ open_surveys_count }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-chart-line fa-3x" style="color: #669BBC; opacity: 0.4;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stats-card text-white shadow-sm" style="background: #C1121F; border-radius: 12px; border: none;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-2" style="font-size: 0.875rem; font-weight: 500; color: rgba(255,255,255,0.9);">Avg Responses</p>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700; color: #ffffff;">{{ avg_responses_per_survey|floatformat:1 }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-chart-bar fa-3x" style="color: rgba(255,255,255,0.2);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Overview Section -->
+<div class="row mb-5">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom pt-4 pb-3 px-4">
+                <h5 class="mb-0 fw-bold" style="color: #003049;">
+                    <i class="fas fa-chart-bar me-2" style="color: #669BBC;"></i> Overview & Summary
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded shadow-sm" style="background: #e8f4f8; border-left: 4px solid #669BBC;">
+                            <div>
+                                <div class="fw-semibold mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #003049;">Active Surveys</div>
+                                <h4 class="mb-0 fw-bold" style="color: #003049;">{{ active_surveys }} <span style="font-size: 1rem; color: #669BBC; font-weight: 500;">/ {{ total_surveys }}</span></h4>
+                            </div>
+                            <div>
+                                <i class="fas fa-chart-line fa-2x" style="color: #669BBC;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded shadow-sm" style="background: #fce8ea; border-left: 4px solid #C1121F;">
+                            <div>
+                                <div class="fw-semibold mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #780000;">Closed Surveys</div>
+                                <h4 class="mb-0 fw-bold" style="color: #780000;">{{ closed_surveys_count }}</h4>
+                            </div>
+                            <div>
+                                <i class="fas fa-lock fa-2x" style="color: #C1121F;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded shadow-sm" style="background: #e8f4f8; border-left: 4px solid #669BBC;">
+                            <div>
+                                <div class="fw-semibold mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #003049;">Avg Responses</div>
+                                <h4 class="mb-0 fw-bold" style="color: #003049;">{{ avg_responses_per_survey|floatformat:1 }} <span style="font-size: 1rem; color: #669BBC; font-weight: 500;">per survey</span></h4>
+                            </div>
+                            <div>
+                                <i class="fas fa-calculator fa-2x" style="color: #669BBC;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded shadow-sm" style="background: #fef9ec; border-left: 4px solid #669BBC;">
+                            <div>
+                                <div class="fw-semibold mb-1" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #003049;">Total Responses</div>
+                                <h4 class="mb-0 fw-bold" style="color: #003049;">
+                                    {% if total_surveys > 0 %}
+                                        {{ total_responses|floatformat:0 }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </h4>
+                            </div>
+                            <div>
+                                <i class="fas fa-check-double fa-2x" style="color: #003049; opacity: 0.5;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-gradient" style="background: #C1121F; border-bottom: 2px solid #780000;">
+                <h5 class="mb-0 fw-bold text-white">
+                    <i class="fas fa-trophy"></i> Top Surveys
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if surveys_with_counts %}
+                    <div class="list-group list-group-flush">
+                        {% for survey in surveys_with_counts|slice:":5" %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center p-3 border-bottom" style="transition: all 0.3s ease; background: white;">
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold mb-1" style="color: #003049;">{{ survey.title|truncatechars:30 }}</div>
+                                <small style="color: #6b7280;">
+                                    <i class="fas fa-users me-1" style="color: #669BBC;"></i>{{ survey.response_count }} response{{ survey.response_count|pluralize }}
+                                </small>
+                            </div>
+                            <a href="{% url 'analytics' survey.id %}" class="btn btn-sm" style="background: #669BBC; color: white; border: none;">
+                                <i class="fas fa-chart-bar"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                        <p class="mb-0">No survey data yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Surveys Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-gradient d-flex justify-content-between align-items-center" style="background: #003049; border-bottom: 2px solid #669BBC;">
+                <h5 class="mb-0 fw-bold text-white">
+                    <i class="fas fa-clock"></i> Recent Surveys
+                </h5>
+                <a href="{% url 'manage_surveys' %}" class="btn btn-sm text-white" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                    View all <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body p-4">
+                {% if surveys %}
+                    <div class="row g-3">
+                        {% for survey in surveys|slice:":4" %}
+                        <div class="col-lg-3 col-md-6">
+                            <div class="card border-0 h-100 shadow-sm" style="transition: all 0.3s ease; {% if survey.is_published and survey.is_open %}background: #e8f4f8;{% elif survey.is_published %}background: #fce8ea;{% else %}background: #fef9ec;{% endif %}">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h6 class="fw-bold mb-0" style="color: #003049;">{{ survey.title|truncatechars:40 }}</h6>
+                                        {% if survey.is_published and survey.is_open %}
+                                            <span class="badge" style="background: #669BBC; font-size: 0.75rem;">Active</span>
+                                        {% elif survey.is_published %}
+                                            <span class="badge" style="background: #C1121F; font-size: 0.75rem;">Closed</span>
+                                        {% else %}
+                                            <span class="badge" style="background: #FDF0D5; color: #003049; border: 2px solid #669BBC; font-size: 0.75rem;">Draft</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <p class="text-muted small mb-2" style="font-size: 0.875rem;">
+                                            <i class="fas fa-calendar-alt me-1" style="color: {% if survey.is_published and survey.is_open %}#669BBC{% elif survey.is_published %}#C1121F{% else %}#003049{% endif %};"></i>
+                                            Due: {{ survey.due_date|date:"M d, Y" }}
+                                        </p>
+                                        <p class="text-muted small mb-2" style="font-size: 0.875rem;">
+                                            <i class="fas fa-clock me-1" style="color: {% if survey.is_published and survey.is_open %}#669BBC{% elif survey.is_published %}#C1121F{% else %}#003049{% endif %};"></i>
+                                            {{ survey.due_date|date:"h:i A" }}
+                                        </p>
+                                        <p class="mb-0" style="font-size: 0.875rem;">
+                                            <i class="fas fa-users me-1" style="color: {% if survey.is_published and survey.is_open %}#669BBC{% elif survey.is_published %}#C1121F{% else %}#003049{% endif %};"></i>
+                                            <strong>{{ survey.responses.count }}</strong> response{{ survey.responses.count|pluralize }}
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'response_management' survey.id %}" class="btn btn-sm flex-grow-1" style="background: white; color: #003049; border: 2px solid #669BBC; font-weight: 600;">
+                                            <i class="fas fa-list"></i> View
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-list fa-4x mb-3" style="color: #cbd5e1;"></i>
+                        <p class="text-muted mb-0">No surveys created yet. Create your first survey to get started!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-gradient" style="background: #FDF0D5; border-bottom: 2px solid #669BBC;">
+                <h5 class="mb-0 fw-bold" style="color: #003049;">
+                    <i class="fas fa-chart-pie" style="color: #669BBC;"></i> Analytics & Visualizations
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm h-100" style="background: white;">
+                            <div class="card-header border-0 bg-transparent pt-4 px-4">
+                                <h6 class="fw-bold mb-1" style="color: #003049;">
+                                    <i class="fas fa-chart-bar me-2" style="color: #669BBC;"></i>Response Volume
+                                </h6>
+                                <p class="text-muted small mb-0">Last {{ responses_chart_labels|length }} surveys</p>
+                            </div>
+                            <div class="card-body px-4 pb-4">
+                                <canvas id="responsesBarChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm h-100" style="background: white;">
+                            <div class="card-header border-0 bg-transparent pt-4 px-4">
+                                <h6 class="fw-bold mb-1" style="color: #003049;">
+                                    <i class="fas fa-pie-chart me-2" style="color: #669BBC;"></i>Survey Status
+                                </h6>
+                                <p class="text-muted small mb-0">Draft vs Active vs Closed</p>
+                            </div>
+                            <div class="card-body px-4 pb-4">
+                                <canvas id="surveyStatusChart" height="220"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm" style="background: white;">
+                            <div class="card-header border-0 bg-transparent pt-4 px-4">
+                                <h6 class="fw-bold mb-1" style="color: #003049;">
+                                    <i class="fas fa-cloud me-2" style="color: #669BBC;"></i>Word Cloud
+                                </h6>
+                                <p class="text-muted small mb-0">Common words from responses</p>
+                            </div>
+                            <div class="card-body px-4 pb-4">
+                                <div id="dashboard-word-cloud" class="word-cloud-container text-muted" style="min-height: 220px; background: #f8f9fa; border: 2px dashed #669BBC; border-radius: 0.75rem;">
+                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                        <div class="text-center">
+                                            <div class="spinner-border mb-2" style="color: #669BBC;" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="text-muted small mb-0">Loading word cloud...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Real-time date and time
+    function updateDateTime() {
+        const now = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        };
+        const dateTimeString = now.toLocaleString('en-US', options);
+        const dateTimeElement = document.getElementById('current-datetime');
+        if (dateTimeElement) {
+            dateTimeElement.textContent = dateTimeString;
+        }
+    }
+    
+    // Update immediately and then every second
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    
+    const responseLabels = {{ responses_chart_labels|default:"[]"|safe }};
+    const responseCounts = {{ responses_chart_counts|default:"[]"|safe }};
+    const statusLabels = {{ status_chart_labels|default:"[]"|safe }};
+    const statusData = {{ status_chart_data|default:"[]"|safe }};
+
+    const barCtx = document.getElementById('responsesBarChart');
+    if (barCtx && responseLabels.length) {
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: responseLabels,
+                datasets: [{
+                    label: 'Responses',
+                    data: responseCounts,
+                    backgroundColor: 'rgba(102, 155, 188, 0.8)',
+                    borderColor: '#669BBC',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    hoverBackgroundColor: '#5a8aa8'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#003049',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { 
+                            precision: 0,
+                            font: { size: 12 },
+                            color: '#64748b'
+                        },
+                        grid: {
+                            color: '#e2e8f0',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: { size: 12 },
+                            color: '#64748b'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const pieCtx = document.getElementById('surveyStatusChart');
+    if (pieCtx && statusLabels.length) {
+        new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: [
+                        'rgba(102, 155, 188, 0.8)',  // Active - Steel Blue
+                        'rgba(193, 18, 31, 0.8)',    // Closed - Flag Red
+                        'rgba(253, 240, 213, 0.8)'   // Draft - Papaya Whip
+                    ],
+                    borderColor: [
+                        '#669BBC',
+                        '#C1121F',
+                        '#FDF0D5'
+                    ],
+                    borderWidth: 2,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { 
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: { size: 13, weight: '600' },
+                            color: '#1e293b',
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+
+    // Word Cloud
+    const wordCloudData = {{ word_cloud_data|default:"[]"|safe }};
+    const wordCloudContainer = document.getElementById('dashboard-word-cloud');
+    if (wordCloudContainer && wordCloudData.length > 0) {
+        function tokenize(text) {
+            if (!text) return [];
+            return text.toLowerCase()
+                .replace(/[^\w\s]/g, ' ')
+                .split(/\s+/)
+                .filter(word => word.length > 2);
+        }
+
+        const frequencyMap = {};
+        wordCloudData.forEach(response => {
+            tokenize(response).forEach(word => {
+                frequencyMap[word] = (frequencyMap[word] || 0) + 1;
+            });
+        });
+
+        const entries = Object.entries(frequencyMap).sort((a, b) => b[1] - a[1]);
+        if (entries.length > 0) {
+            wordCloudContainer.innerHTML = '';
+            wordCloudContainer.classList.remove('text-muted');
+
+            const maxFrequency = entries[0][1];
+            const minFrequency = entries[entries.length - 1][1];
+            const minFontSize = 0.9;
+            const maxFontSize = 2.5;
+            const fontSizeRange = maxFontSize - minFontSize;
+
+            entries.slice(0, 50).forEach(([word, count]) => {
+                const weight = maxFrequency > minFrequency 
+                    ? (count - minFrequency) / (maxFrequency - minFrequency)
+                    : 1;
+                const fontSize = minFontSize + (weight * fontSizeRange);
+                
+                const span = document.createElement('span');
+                span.textContent = word;
+                span.className = 'word-cloud-word';
+                span.style.fontSize = fontSize.toFixed(2) + 'rem';
+                span.title = `Used ${count} time${count !== 1 ? 's' : ''}`;
+                span.style.cursor = 'help';
+                span.style.order = Math.round(Math.random() * 100);
+                wordCloudContainer.appendChild(span);
+            });
+        } else {
+            wordCloudContainer.textContent = 'No text responses yet.';
+            wordCloudContainer.classList.add('text-muted');
+        }
+    } else if (wordCloudContainer) {
+        wordCloudContainer.textContent = 'No text responses yet.';
+        wordCloudContainer.classList.add('text-muted');
+    }
+});
+</script>
+{% endblock %}
+

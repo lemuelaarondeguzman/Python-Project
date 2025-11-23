@@ -1,0 +1,862 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Edit Survey: {{ survey.title }} - Survey System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .textarea-wrapper {
+        position: relative;
+    }
+    
+    .textarea-placeholder {
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        right: 1px;
+        bottom: 1px;
+        padding: 0.375rem 0.75rem !important;
+        color: #9ca3af;
+        pointer-events: none;
+        border: none;
+        line-height: 1.5 !important;
+        font-family: inherit !important;
+        font-size: 1rem !important;
+        z-index: 1;
+        background: transparent;
+        overflow: hidden;
+        font-weight: 400;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+    }
+    
+    .textarea-placeholder .placeholder-line {
+        display: block !important;
+        color: #9ca3af;
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.5 !important;
+        height: 1.5em !important;
+        min-height: 1.5em !important;
+        max-height: 1.5em !important;
+        white-space: nowrap !important;
+        position: relative;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+    
+    .textarea-placeholder .placeholder-line.hidden {
+        display: none !important;
+    }
+    
+    .textarea-wrapper textarea.form-control,
+    .textarea-wrapper textarea.multiple-choice-textarea {
+        position: relative;
+        z-index: 2;
+        background-color: transparent !important;
+        color: #212529;
+        line-height: 1.5 !important;
+        padding: 0.375rem 0.75rem !important;
+        resize: vertical;
+        font-size: 1rem !important;
+        font-family: inherit !important;
+        border: 1px solid #ced4da !important;
+        margin: 0 !important;
+        vertical-align: top;
+        box-sizing: border-box !important;
+    }
+    
+    .textarea-wrapper textarea.form-control::placeholder,
+    .textarea-wrapper textarea.multiple-choice-textarea::placeholder {
+        color: transparent !important;
+        opacity: 0 !important;
+    }
+    
+    .textarea-wrapper textarea.form-control:focus,
+    .textarea-wrapper textarea.multiple-choice-textarea:focus {
+        background-color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    .textarea-wrapper textarea.form-control.has-text,
+    .textarea-wrapper textarea.multiple-choice-textarea.has-text {
+        background-color: rgba(255, 255, 255, 0.7) !important;
+    }
+    
+    .textarea-placeholder.hidden {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-edit"></i> Edit Survey: {{ survey.title }}</h2>
+            <p class="text-muted">Add and manage questions for your survey.</p>
+        </div>
+        <a href="{% url 'teacher_settings' %}" class="btn btn-outline-primary" title="Settings">
+            <i class="fas fa-cog"></i>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        
+        <!-- Add Question Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus"></i> Add New Question
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="question">
+                    
+                    <div class="mb-3">
+                        <label for="question_text" class="form-label">Question Text</label>
+                        <textarea class="form-control" name="question_text" rows="2" required></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="question_type" class="form-label">Question Type</label>
+                            <select class="form-select" name="question_type" required onchange="toggleQuestionOptions(this)">
+                                <option value="">Select type...</option>
+                                <option value="multiple_choice">Multiple Choice</option>
+                                <option value="likert_scale">Likert Scale</option>
+                                <option value="short_answer">Short Answer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" name="is_required" checked>
+                                <label class="form-check-label">Required Question</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Multiple Choice Options -->
+                    <div id="multiple-choice-options" style="display: none;">
+                        <label class="form-label">Multiple Choice Options (one per line)</label>
+                        <div class="textarea-wrapper position-relative">
+                            <textarea class="form-control multiple-choice-textarea" name="choices" rows="4" data-placeholder="Option 1&#10;Option 2&#10;Option 3&#10;Option 4"></textarea>
+                            <div class="textarea-placeholder">
+                                <span class="placeholder-line" data-line="0">Option 1</span>
+                                <span class="placeholder-line" data-line="1">Option 2</span>
+                                <span class="placeholder-line" data-line="2">Option 3</span>
+                                <span class="placeholder-line" data-line="3">Option 4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Likert Scale Options -->
+                    <div id="likert-scale-options" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Minimum Value</label>
+                                <input type="number" class="form-control" name="likert_min" value="1" min="1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Maximum Value</label>
+                                <input type="number" class="form-control" name="likert_max" value="5" min="2">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Labels (optional, one per line)</label>
+                            <textarea class="form-control" name="likert_labels" rows="3" placeholder="Very Dissatisfied&#10;Dissatisfied&#10;Neutral&#10;Satisfied&#10;Very Satisfied"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Question
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Existing Questions -->
+        {% if questions %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list"></i> Survey Questions ({{ questions.count }})
+                    <small class="text-muted ms-2">
+                        <i class="fas fa-grip-vertical"></i> Drag to reorder
+                    </small>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="questions-list" class="questions-sortable">
+                {% for question in questions %}
+                <div class="card mb-3 question-item" id="question-{{ question.id }}" data-question-id="{{ question.id }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="question-drag-handle me-3" style="cursor: move; color: #6c757d; font-size: 1.2rem; padding-top: 0.25rem;">
+                                <i class="fas fa-grip-vertical"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div id="question-display-{{ question.id }}">
+                                    <h6 class="card-title">
+                                        <span class="question-number">{{ forloop.counter }}</span>. <span id="question-text-{{ question.id }}">{{ question.question_text }}</span>
+                                        {% if question.is_required %}
+                                            <span class="badge bg-danger">Required</span>
+                                        {% endif %}
+                                    </h6>
+                                    <p class="card-text">
+                                        <span class="badge bg-info" id="question-type-{{ question.id }}">{{ question.get_question_type_display }}</span>
+                                    </p>
+                                </div>
+                                <div id="question-edit-{{ question.id }}" style="display: none;">
+                                    <form id="edit-form-{{ question.id }}">
+                                        <div class="mb-2">
+                                            <label class="form-label">Question Text</label>
+                                            <textarea class="form-control" name="question_text" rows="2" required>{{ question.question_text }}</textarea>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-2">
+                                                <label class="form-label">Question Type</label>
+                                                <select class="form-select" name="question_type" required onchange="toggleEditQuestionOptions({{ question.id }}, this.value)">
+                                                    <option value="multiple_choice" {% if question.question_type == 'multiple_choice' %}selected{% endif %}>Multiple Choice</option>
+                                                    <option value="likert_scale" {% if question.question_type == 'likert_scale' %}selected{% endif %}>Likert Scale</option>
+                                                    <option value="short_answer" {% if question.question_type == 'short_answer' %}selected{% endif %}>Short Answer</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-2">
+                                                <div class="form-check mt-4">
+                                                    <input class="form-check-input" type="checkbox" name="is_required" {% if question.is_required %}checked{% endif %}>
+                                                    <label class="form-check-label">Required Question</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Multiple Choice Options -->
+                                        <div id="edit-multiple-choice-options-{{ question.id }}" style="display: {% if question.question_type == 'multiple_choice' %}block{% else %}none{% endif %};">
+                                            <label class="form-label">Multiple Choice Options (one per line)</label>
+                                            <div class="textarea-wrapper position-relative">
+                                                <textarea class="form-control multiple-choice-textarea" name="choices" rows="4">{% if question.question_type == 'multiple_choice' %}{% for choice in question.choices %}{{ choice }}{% if not forloop.last %}
+{% endif %}{% endfor %}{% endif %}</textarea>
+                                                <div class="textarea-placeholder">
+                                                    <span class="placeholder-line" data-line="0">Option 1</span>
+<span class="placeholder-line" data-line="1">Option 2</span>
+<span class="placeholder-line" data-line="2">Option 3</span>
+<span class="placeholder-line" data-line="3">Option 4</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Likert Scale Options -->
+                                        <div id="edit-likert-scale-options-{{ question.id }}" style="display: {% if question.question_type == 'likert_scale' %}block{% else %}none{% endif %};">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Minimum Value</label>
+                                                    <input type="number" class="form-control" name="likert_min" value="{{ question.likert_min|default:1 }}" min="1">
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Maximum Value</label>
+                                                    <input type="number" class="form-control" name="likert_max" value="{{ question.likert_max|default:5 }}" min="2">
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Labels (optional, one per line)</label>
+                                                <textarea class="form-control" name="likert_labels" rows="3">{% if question.question_type == 'likert_scale' and question.likert_labels %}{% for label in question.likert_labels %}{{ label }}{% if not forloop.last %}
+{% endif %}{% endfor %}{% endif %}</textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-save"></i> Save
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-secondary" onclick="cancelEdit({{ question.id }})">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="editQuestion({{ question.id }})"
+                                            id="edit-btn-{{ question.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteQuestion({{ question.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No questions added yet. Add your first question above.
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Survey Details
+                </h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Title:</strong> {{ survey.title }}</p>
+                <p><strong>Description:</strong> {{ survey.description }}</p>
+                {% if survey.open_time %}
+                <p><strong>Open Time:</strong> {{ survey.open_time|date:"M d, Y h:i A" }}</p>
+                {% else %}
+                <p><strong>Open Time:</strong> <span class="text-muted">Immediately (not scheduled)</span></p>
+                {% endif %}
+                <p><strong>Due Date:</strong> {{ survey.due_date|date:"M d, Y h:i A" }}</p>
+                <p><strong>Time Limit:</strong>
+                    {% if survey.time_limit_minutes %}
+                        {{ survey.time_limit_minutes }} minutes
+                    {% else %}
+                        <span class="text-muted">No time limit</span>
+                    {% endif %}
+                </p>
+                <p><strong>Status:</strong> 
+                    {% if not survey.is_published %}
+                        <span class="badge bg-secondary text-dark">Draft</span>
+                    {% elif survey.is_open %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Closed</span>
+                    {% endif %}
+                </p>
+                <p><strong>Questions:</strong> {{ questions.count }}</p>
+                <p><strong>Responses:</strong> {{ survey.responses.count }}</p>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#scheduleCollapse" aria-expanded="true" aria-controls="scheduleCollapse">
+                <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-clock"></i> Schedule & Time Limit
+                    </span>
+                    <i class="fas fa-chevron-down" id="scheduleChevron"></i>
+                </h5>
+            </div>
+            <div id="scheduleCollapse" class="collapse show" aria-labelledby="scheduleCollapse">
+            <div class="card-body">
+                <form method="post" class="schedule-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="schedule">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label text-uppercase text-muted small fw-semibold mb-1">Open Window</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-door-open"></i></span>
+                                {{ schedule_form.open_time }}
+                            </div>
+                            <small class="text-muted">Leave blank to open immediately after publishing.</small>
+                            {% if schedule_form.open_time.errors %}
+                                <div class="text-danger small mt-1">{{ schedule_form.open_time.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-uppercase text-muted small fw-semibold mb-1">Due Date</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                {{ schedule_form.due_date }}
+                            </div>
+                            {% if schedule_form.due_date.errors %}
+                                <div class="text-danger small mt-1">{{ schedule_form.due_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-uppercase text-muted small fw-semibold mb-1">Time Limit (Optional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-stopwatch"></i></span>
+                                {{ schedule_form.time_limit_minutes }}
+                                <span class="input-group-text">minutes</span>
+                            </div>
+                            <small class="text-muted">Leave blank for no limit. Timer starts when a student opens the survey.</small>
+                            {% if schedule_form.time_limit_minutes.errors %}
+                                <div class="text-danger small mt-1">{{ schedule_form.time_limit_minutes.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <hr>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save"></i> Save Schedule
+                    </button>
+                </form>
+            </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#sectionsCollapse" aria-expanded="true" aria-controls="sectionsCollapse">
+                <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-users"></i> Assign Sections
+                    </span>
+                    <i class="fas fa-chevron-down" id="sectionsChevron"></i>
+                </h5>
+            </div>
+            <div id="sectionsCollapse" class="collapse show" aria-labelledby="sectionsCollapse">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="assignment">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0">Available Sections</label>
+                            <button type="button" class="btn btn-link btn-sm p-0" id="toggleSelectAllSections">Select All</button>
+                        </div>
+                        <div class="section-checkboxes border rounded p-3">
+                            {% for checkbox in assignment_form.assigned_sections %}
+                            <div class="form-check">
+                                {{ checkbox.tag }}
+                                <label class="form-check-label ms-1">{{ checkbox.choice_label }}</label>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted mb-0">No sections available.</p>
+                            {% endfor %}
+                        </div>
+                        {% if assignment_form.assigned_sections.errors %}
+                            <div class="text-danger small mt-2">{{ assignment_form.assigned_sections.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save"></i> Save Sections
+                    </button>
+                </form>
+                {% if survey.is_published and survey.assigned_sections.count == 0 %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        Assign at least one section to keep this survey published.
+                    </div>
+                {% endif %}
+            </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools"></i> Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <form method="post" action="{% if survey.is_published %}{% url 'unpublish_survey' survey.id %}{% else %}{% url 'publish_survey' survey.id %}{% endif %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn w-100 {% if survey.is_published %}btn-outline-warning text-dark{% else %}btn-outline-success{% endif %}"
+                                {% if not survey.is_published and survey.assigned_sections.count == 0 %}disabled title="Assign at least one section before publishing"{% endif %}>
+                            {% if survey.is_published %}
+                                <i class="fas fa-eye-slash"></i> Unpublish Survey
+                            {% else %}
+                                <i class="fas fa-bullhorn"></i> Publish Survey
+                            {% endif %}
+                        </button>
+                    </form>
+                    <a href="{% url 'manage_surveys' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Survey Builder
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+function refreshQuestionNumbers() {
+    const questionItems = document.querySelectorAll('#questions-list .question-item');
+    questionItems.forEach((item, index) => {
+        const numberEl = item.querySelector('.question-number');
+        if (numberEl) {
+            numberEl.textContent = index + 1;
+        }
+    });
+}
+
+function toggleQuestionOptions(selectElement) {
+    const questionType = selectElement.value;
+    const multipleChoiceDiv = document.getElementById('multiple-choice-options');
+    const likertScaleDiv = document.getElementById('likert-scale-options');
+    
+    // Hide all options first
+    multipleChoiceDiv.style.display = 'none';
+    likertScaleDiv.style.display = 'none';
+    
+    // Show relevant options based on question type
+    if (questionType === 'multiple_choice') {
+        multipleChoiceDiv.style.display = 'block';
+        // Setup per-line placeholder for multiple choice
+        const textarea = multipleChoiceDiv.querySelector('textarea[name="choices"]');
+        if (textarea) {
+            setTimeout(() => {
+                setupMultipleChoicePlaceholder(textarea);
+            }, 0);
+        }
+    } else if (questionType === 'likert_scale') {
+        likertScaleDiv.style.display = 'block';
+    }
+}
+
+function toggleEditQuestionOptions(questionId, questionType) {
+    const multipleChoiceDiv = document.getElementById(`edit-multiple-choice-options-${questionId}`);
+    const likertScaleDiv = document.getElementById(`edit-likert-scale-options-${questionId}`);
+    
+    // Hide all options first
+    if (multipleChoiceDiv) multipleChoiceDiv.style.display = 'none';
+    if (likertScaleDiv) likertScaleDiv.style.display = 'none';
+    
+    // Show relevant options based on question type
+    if (questionType === 'multiple_choice' && multipleChoiceDiv) {
+        multipleChoiceDiv.style.display = 'block';
+        // Setup per-line placeholder for multiple choice
+        const textarea = multipleChoiceDiv.querySelector('textarea[name="choices"]');
+        if (textarea) {
+            setTimeout(() => {
+                setupMultipleChoicePlaceholder(textarea);
+            }, 0);
+        }
+    } else if (questionType === 'likert_scale' && likertScaleDiv) {
+        likertScaleDiv.style.display = 'block';
+    }
+}
+
+function editQuestion(questionId) {
+    // Hide display, show edit form
+    document.getElementById(`question-display-${questionId}`).style.display = 'none';
+    document.getElementById(`question-edit-${questionId}`).style.display = 'block';
+    
+    // Hide edit button
+    document.getElementById(`edit-btn-${questionId}`).style.display = 'none';
+    
+    // Show appropriate options based on current question type
+    const form = document.getElementById(`edit-form-${questionId}`);
+    if (form) {
+        const questionTypeSelect = form.querySelector('select[name="question_type"]');
+        if (questionTypeSelect) {
+            toggleEditQuestionOptions(questionId, questionTypeSelect.value);
+        }
+    }
+}
+
+function cancelEdit(questionId) {
+    // Show display, hide edit form
+    document.getElementById(`question-display-${questionId}`).style.display = 'block';
+    document.getElementById(`question-edit-${questionId}`).style.display = 'none';
+    
+    // Show edit button
+    document.getElementById(`edit-btn-${questionId}`).style.display = 'inline-block';
+}
+
+function deleteQuestion(questionId) {
+    if (confirm('Are you sure you want to delete this question?')) {
+        fetch(`/teacher/question/${questionId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting question');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting question');
+        });
+    }
+}
+
+// Initialize drag-and-drop for questions
+document.addEventListener('DOMContentLoaded', function() {
+    const questionsList = document.getElementById('questions-list');
+    if (questionsList && typeof Sortable !== 'undefined') {
+        const sortable = new Sortable(questionsList, {
+            handle: '.question-drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                // Get all question items in new order
+                const questionItems = questionsList.querySelectorAll('.question-item');
+                const questionOrders = [];
+                
+                questionItems.forEach((item, index) => {
+                    const questionId = item.getAttribute('data-question-id');
+                    questionOrders.push({
+                        id: parseInt(questionId),
+                        order: index
+                    });
+                });
+                
+                refreshQuestionNumbers();
+
+                // Send new order to server
+                fetch(`/teacher/survey/{{ survey.id }}/reorder-questions/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question_orders: questionOrders
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        console.error('Error reordering questions:', data.error);
+                        // Reload page to restore original order
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error reordering questions:', error);
+                    // Reload page to restore original order
+                    location.reload();
+                });
+            }
+        });
+    }
+});
+
+// Handle edit form submissions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to all edit forms
+    const editForms = document.querySelectorAll('[id^="edit-form-"]');
+    editForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const questionId = this.id.replace('edit-form-', '');
+            const formData = new FormData(this);
+            
+            fetch(`/teacher/question/${questionId}/edit/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the display with new values
+                    const questionText = formData.get('question_text');
+                    const questionType = formData.get('question_type');
+                    const isRequired = formData.get('is_required') === 'on';
+                    
+                    document.getElementById(`question-text-${questionId}`).textContent = questionText;
+                    
+                    // Update question type badge
+                    const typeBadge = document.getElementById(`question-type-${questionId}`);
+                    const typeLabels = {
+                        'multiple_choice': 'Multiple Choice',
+                        'likert_scale': 'Likert Scale',
+                        'short_answer': 'Short Answer'
+                    };
+                    typeBadge.textContent = typeLabels[questionType];
+                    
+                    // Update required badge
+                    const requiredBadge = document.querySelector(`#question-display-${questionId} .badge.bg-danger`);
+                    if (isRequired && !requiredBadge) {
+                        const titleElement = document.querySelector(`#question-display-${questionId} h6`);
+                        titleElement.innerHTML += ' <span class="badge bg-danger">Required</span>';
+                    } else if (!isRequired && requiredBadge) {
+                        requiredBadge.remove();
+                    }
+                    
+                    // Hide edit form, show display
+                    cancelEdit(questionId);
+                    
+                    // Show success message
+                    alert('Question updated successfully!');
+                } else {
+                    alert('Error updating question: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating question');
+            });
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sectionToggleBtn = document.getElementById('toggleSelectAllSections');
+    if (sectionToggleBtn) {
+        const updateToggleText = () => {
+            const checkboxes = document.querySelectorAll('.section-checkboxes input[type="checkbox"]');
+            if (!checkboxes.length) {
+                sectionToggleBtn.classList.add('disabled');
+                return;
+            }
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            sectionToggleBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
+        };
+        sectionToggleBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.section-checkboxes input[type="checkbox"]');
+            if (!checkboxes.length) return;
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+            updateToggleText();
+        });
+        updateToggleText();
+    }
+    refreshQuestionNumbers();
+    
+    // Preserve placeholder for multiple choice options - per-line implementation
+    function setupMultipleChoicePlaceholder(textarea) {
+        if (!textarea) return;
+        
+        // Find the wrapper and placeholder overlay
+        const wrapper = textarea.closest('.textarea-wrapper');
+        if (!wrapper) return;
+        
+        let placeholder = wrapper.querySelector('.textarea-placeholder');
+        if (!placeholder) {
+            // Create placeholder if it doesn't exist
+            placeholder = document.createElement('div');
+            placeholder.className = 'textarea-placeholder';
+            for (let i = 0; i < 4; i++) {
+                const lineSpan = document.createElement('span');
+                lineSpan.className = 'placeholder-line';
+                lineSpan.setAttribute('data-line', i);
+                lineSpan.textContent = 'Option ' + (i + 1);
+                placeholder.appendChild(lineSpan);
+            }
+            wrapper.appendChild(placeholder);
+        }
+        
+        // Function to update placeholder visibility per line
+        function updatePlaceholder() {
+            // Get all lines from textarea
+            const textValue = textarea.value || '';
+            const lines = textValue.split('\n');
+            
+            // Ensure we have at least 4 lines to check
+            while (lines.length < 4) {
+                lines.push('');
+            }
+            
+            // Get all placeholder lines
+            const placeholderLines = placeholder.querySelectorAll('.placeholder-line');
+            
+            // Update visibility for each placeholder line individually
+            let hasAnyContent = false;
+            placeholderLines.forEach(function(placeholderLine) {
+                const lineIndex = parseInt(placeholderLine.getAttribute('data-line'));
+                if (isNaN(lineIndex)) {
+                    return;
+                }
+                
+                // Get the actual content for this specific line - check the exact line index
+                const lineContent = (lines[lineIndex] !== undefined) ? lines[lineIndex] : '';
+                const trimmedContent = lineContent.trim();
+                
+                // Only hide the placeholder for THIS specific line if it has actual content
+                // Other placeholder lines should remain visible if their corresponding lines are empty
+                if (trimmedContent.length > 0) {
+                    placeholderLine.style.display = 'none';
+                    placeholderLine.style.visibility = 'hidden';
+                    hasAnyContent = true;
+                } else {
+                    // This line is empty, so show its placeholder
+                    placeholderLine.style.display = 'block';
+                    placeholderLine.style.visibility = 'visible';
+                }
+            });
+            
+            // Apply semi-transparent background only when there's content
+            // Empty line placeholders should remain visible
+            if (hasAnyContent) {
+                textarea.classList.add('has-text');
+                wrapper.classList.add('has-content');
+                // Semi-transparent background - empty line placeholders will show through
+                textarea.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
+            } else {
+                textarea.classList.remove('has-text');
+                wrapper.classList.remove('has-content');
+                textarea.style.backgroundColor = 'transparent';
+            }
+            
+            // CRITICAL: Always keep the placeholder container visible
+            // Individual placeholder lines are controlled per-line above
+            placeholder.style.display = '';
+            placeholder.style.visibility = 'visible';
+            placeholder.style.opacity = '1';
+        }
+        
+        // Remove any existing event listeners by cloning the textarea (if needed)
+        // Check on input, focus, blur, and page load
+        textarea.addEventListener('input', updatePlaceholder);
+        textarea.addEventListener('keyup', updatePlaceholder);
+        textarea.addEventListener('keydown', updatePlaceholder);
+        textarea.addEventListener('focus', updatePlaceholder);
+        textarea.addEventListener('blur', updatePlaceholder);
+        textarea.addEventListener('paste', function() {
+            setTimeout(updatePlaceholder, 10);
+        });
+        
+        // Initial check
+        setTimeout(updatePlaceholder, 0);
+    }
+    
+    // Setup placeholder for new question form
+    const multipleChoiceTextarea = document.querySelector('#multiple-choice-options textarea[name="choices"]');
+    setupMultipleChoicePlaceholder(multipleChoiceTextarea);
+    
+    // Handle edit mode multiple choice placeholders
+    document.querySelectorAll('[id^="edit-multiple-choice-options-"] textarea[name="choices"]').forEach(function(textarea) {
+        setupMultipleChoicePlaceholder(textarea);
+    });
+    
+
+    // Handle collapse toggle for Schedule & Time Limit
+    const scheduleCollapse = document.getElementById('scheduleCollapse');
+    const scheduleChevron = document.getElementById('scheduleChevron');
+    if (scheduleCollapse && scheduleChevron) {
+        scheduleCollapse.addEventListener('show.bs.collapse', function () {
+            scheduleChevron.classList.remove('fa-chevron-up');
+            scheduleChevron.classList.add('fa-chevron-down');
+        });
+        scheduleCollapse.addEventListener('hide.bs.collapse', function () {
+            scheduleChevron.classList.remove('fa-chevron-down');
+            scheduleChevron.classList.add('fa-chevron-up');
+        });
+    }
+
+    // Handle collapse toggle for Assign Sections
+    const sectionsCollapse = document.getElementById('sectionsCollapse');
+    const sectionsChevron = document.getElementById('sectionsChevron');
+    if (sectionsCollapse && sectionsChevron) {
+        sectionsCollapse.addEventListener('show.bs.collapse', function () {
+            sectionsChevron.classList.remove('fa-chevron-up');
+            sectionsChevron.classList.add('fa-chevron-down');
+        });
+        sectionsCollapse.addEventListener('hide.bs.collapse', function () {
+            sectionsChevron.classList.remove('fa-chevron-down');
+            sectionsChevron.classList.add('fa-chevron-up');
+        });
+    }
+});
+</script>
+{% endblock %}

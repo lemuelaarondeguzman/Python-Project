@@ -1,0 +1,158 @@
+{% extends 'student/student_base.html' %}
+
+{% block title %}Response History - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-history"></i> Response History</h2>
+    <p class="text-muted">View all your submitted survey responses</p>
+</div>
+
+{% if responses %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-history"></i> Your Responses
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Survey Title</th>
+                        <th>Description</th>
+                        <th>Submitted At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for response in responses %}
+                    <tr>
+                        <td>{{ response.survey.title }}</td>
+                        <td>{{ response.survey.description|truncatechars:50 }}</td>
+                        <td>{{ response.submitted_at|date:"M d, Y h:i A" }}</td>
+                        <td>
+                            <span class="badge bg-success">Completed</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary view-details-btn" 
+                                    data-response-id="{{ response.id }}"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#responseDetailsModal">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Response Details Modal -->
+<div class="modal fade" id="responseDetailsModal" tabindex="-1" aria-labelledby="responseDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="responseDetailsModalLabel">
+                    <i class="fas fa-eye"></i> Response Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="responseDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <p class="text-muted mb-0">No responses yet. Complete your assigned surveys to see them here.</p>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const viewDetailsButtons = document.querySelectorAll('.view-details-btn');
+    const modalContent = document.getElementById('responseDetailsContent');
+    const modal = new bootstrap.Modal(document.getElementById('responseDetailsModal'));
+    
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text ? text.replace(/[&<>"']/g, m => map[m]) : '';
+    }
+    
+    viewDetailsButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const responseId = this.getAttribute('data-response-id');
+            modalContent.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            
+            // Fetch response details
+            fetch(`/student/response/${responseId}/details/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        modalContent.innerHTML = '<div class="alert alert-danger">' + escapeHtml(data.error) + '</div>';
+                        return;
+                    }
+                    
+                    // Build the details HTML
+                    let html = '<div class="mb-3">' +
+                        '<h6 class="text-muted mb-2">Survey Information</h6>' +
+                        '<p class="mb-1"><strong>Survey:</strong> ' + escapeHtml(data.survey.title) + '</p>';
+                    
+                    if (data.survey.description) {
+                        html += '<p class="mb-1"><strong>Description:</strong> ' + escapeHtml(data.survey.description) + '</p>';
+                    }
+                    
+                    html += '<p class="mb-1"><strong>Submitted:</strong> ' + escapeHtml(data.survey.submitted_at) + '</p>' +
+                        '</div>' +
+                        '<hr>' +
+                        '<div>' +
+                        '<h6 class="text-muted mb-3">Your Answers</h6>' +
+                        '<div class="list-group">';
+                    
+                    if (data.answers.length === 0) {
+                        html += '<div class="list-group-item"><p class="text-muted mb-0">No answers found.</p></div>';
+                    } else {
+                        data.answers.forEach((answer, index) => {
+                            html += '<div class="list-group-item">' +
+                                '<h6 class="mb-2">' + (index + 1) + '. ' + escapeHtml(answer.question) + '</h6>' +
+                                '<p class="mb-0"><strong>Type:</strong> ' + escapeHtml(answer.question_type) + '</p>' +
+                                '<p class="mb-0"><strong>Your Answer:</strong> ' + escapeHtml(answer.answer || 'No answer provided') + '</p>' +
+                                '</div>';
+                        });
+                    }
+                    
+                    html += '</div></div>';
+                    modalContent.innerHTML = html;
+                })
+                .catch(error => {
+                    modalContent.innerHTML = '<div class="alert alert-danger">Error loading response details. Please try again.</div>';
+                    console.error('Error:', error);
+                });
+        });
+    });
+});
+</script>
+{% endblock %}
+

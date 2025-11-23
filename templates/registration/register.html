@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Survey System{% endblock %}
+
+{% block navbar %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center p-5">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-6">
+        <div class="card">
+            <div class="card-header border-0 py-4">
+                <h2 class="text-center mb-4">
+                    SIGN UP
+                </h2>
+            </div>
+            <div class="card-body px-5 pb-5 pt-3">
+                <form method="post" id="registrationForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name <span class="text-danger">*</span></label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small">{{ form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name <span class="text-danger">*</span></label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small">{{ form.last_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Username <span class="text-danger">*</span></label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger small">{{ form.username.errors }}</div>
+                        {% endif %}
+                        <div id="username-error" class="text-danger small" style="display: none;"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email <span class="text-danger">*</span></label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.section.id_for_label }}" class="form-label">Section</label>
+                        {{ form.section }}
+                        {% if form.section.errors %}
+                            <div class="text-danger small">{{ form.section.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.password1.id_for_label }}" class="form-label">Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            {{ form.password1 }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('{{ form.password1.id_for_label }}')">
+                                <i class="fas fa-eye" id="toggle-icon-{{ form.password1.id_for_label }}"></i>
+                            </button>
+                        </div>
+                        {% if form.password1.errors %}
+                            <div class="text-danger small">{{ form.password1.errors }}</div>
+                        {% endif %}
+                        <div id="password-error" class="text-danger small" style="display: none;"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            {{ form.password2 }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('{{ form.password2.id_for_label }}')">
+                                <i class="fas fa-eye" id="toggle-icon-{{ form.password2.id_for_label }}"></i>
+                            </button>
+                        </div>
+                        {% if form.password2.errors %}
+                            <div class="text-danger small">{{ form.password2.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn btn-primary">
+                            SIGN UP
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <p class="mb-0">Already have an account? <a href="{% url 'home' %}">Login</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById('toggle-icon-' + fieldId);
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Validation functions
+function validateUsername() {
+    const usernameField = document.getElementById('{{ form.username.id_for_label }}');
+    const usernameError = document.getElementById('username-error');
+    const username = usernameField.value.trim();
+    
+    if (username.length < 6) {
+        usernameError.textContent = 'Username must be at least 6 characters long.';
+        usernameError.style.display = 'block';
+        usernameField.classList.add('is-invalid');
+        return false;
+    } else {
+        usernameError.style.display = 'none';
+        usernameError.textContent = '';
+        usernameField.classList.remove('is-invalid');
+        return true;
+    }
+}
+
+function validatePassword() {
+    const passwordField = document.getElementById('{{ form.password1.id_for_label }}');
+    const passwordError = document.getElementById('password-error');
+    const password = passwordField.value;
+    const errors = [];
+    
+    // Check minimum length
+    if (password.length < 8) {
+        errors.push('Password must be at least 8 characters long.');
+    }
+    
+    // Check for uppercase letter
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter.');
+    }
+    
+    // Check for lowercase letter
+    if (!/[a-z]/.test(password)) {
+        errors.push('Password must contain at least one lowercase letter.');
+    }
+    
+    // Check for symbol (non-alphanumeric character)
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+        errors.push('Password must contain at least one symbol (e.g., !@#$%^&*).');
+    }
+    
+    // Display all errors or clear if valid
+    if (errors.length > 0) {
+        passwordError.innerHTML = errors.join('<br>');
+        passwordError.style.display = 'block';
+        passwordField.classList.add('is-invalid');
+        return false;
+    } else {
+        passwordError.style.display = 'none';
+        passwordError.textContent = '';
+        passwordField.classList.remove('is-invalid');
+        return true;
+    }
+}
+
+// Add event listeners when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const firstNameField = document.getElementById('{{ form.first_name.id_for_label }}');
+    const usernameField = document.getElementById('{{ form.username.id_for_label }}');
+    const passwordField = document.getElementById('{{ form.password1.id_for_label }}');
+    const registrationForm = document.getElementById('registrationForm');
+    
+    // First name field has autofocus attribute, so no need to manually focus
+    // But we'll ensure it's focused if autofocus didn't work (e.g., after form errors)
+    const formHasValues = firstNameField && firstNameField.value !== '';
+    const hasFormErrors = document.querySelector('.text-danger') !== null;
+    // Only focus if field is empty, no errors, and not already focused
+    if (firstNameField && !formHasValues && !hasFormErrors && document.activeElement !== firstNameField) {
+        setTimeout(function() {
+            firstNameField.focus();
+        }, 100);
+    }
+    
+    // Validate on blur and input
+    if (usernameField) {
+        usernameField.addEventListener('blur', validateUsername);
+        usernameField.addEventListener('input', function() {
+            // Clear error if field becomes valid while typing
+            if (this.value.length >= 6) {
+                const usernameError = document.getElementById('username-error');
+                usernameError.style.display = 'none';
+                usernameError.textContent = '';
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    if (passwordField) {
+        passwordField.addEventListener('blur', validatePassword);
+        passwordField.addEventListener('input', function() {
+            // Validate password as user types (shows all errors at once)
+            if (this.value.length > 0) {
+                validatePassword();
+            } else {
+                // Clear error if field is empty
+                const passwordError = document.getElementById('password-error');
+                passwordError.style.display = 'none';
+                passwordError.textContent = '';
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+    
+    // Prevent form submission if validation fails
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', function(e) {
+            const isUsernameValid = validateUsername();
+            const isPasswordValid = validatePassword();
+            
+            if (!isUsernameValid || !isPasswordValid) {
+                e.preventDefault();
+                // Focus on username field if it's invalid, otherwise focus on password
+                if (!isUsernameValid) {
+                    usernameField.focus();
+                } else if (!isPasswordValid) {
+                    passwordField.focus();
+                }
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

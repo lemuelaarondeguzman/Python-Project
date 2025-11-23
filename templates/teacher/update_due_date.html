@@ -1,0 +1,59 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Update Due Date - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2><i class="fas fa-calendar-alt"></i> Update Due Date</h2>
+        <p class="text-muted mb-0">Update schedule for: <strong>{{ survey.title }}</strong></p>
+    </div>
+    <a href="{% url 'set_due_dates' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Set Due Dates
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.open_time.id_for_label }}" class="form-label">Open Time (Optional)</label>
+                {{ form.open_time }}
+                <small class="form-text text-muted d-block mt-1">Set when the survey opens for students. If not set, the survey opens immediately when published.</small>
+                {% if form.open_time.errors %}
+                    <div class="text-danger small mt-1">{{ form.open_time.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date <span class="text-danger">*</span></label>
+                {{ form.due_date }}
+                {% if form.due_date.errors %}
+                    <div class="text-danger small mt-1">{{ form.due_date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.time_limit_minutes.id_for_label }}" class="form-label">Time Limit (Minutes, Optional)</label>
+                {{ form.time_limit_minutes }}
+                <small class="form-text text-muted d-block mt-1">Leave blank for no time limit. Minimum of 1 minute.</small>
+                {% if form.time_limit_minutes.errors %}
+                    <div class="text-danger small mt-1">{{ form.time_limit_minutes.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'set_due_dates' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Update Due Date
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

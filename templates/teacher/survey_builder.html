@@ -1,0 +1,162 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Survey Builder - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header mb-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h2 style="color: #003049; font-weight: 700;">
+                <i class="fas fa-plus-circle me-2" style="color: #669BBC;"></i> Create New Survey
+            </h2>
+            <p class="mb-0" style="color: #6b7280; font-size: 1.05rem;">Fill out the survey details to get started.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card" style="border: 2px solid #e5e7eb; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 48, 73, 0.08);">
+            <div class="card-header" style="background: #669BBC; border-bottom: none; border-radius: 10px 10px 0 0; padding: 1.25rem 1.5rem;">
+                <h5 class="mb-0" style="color: white; font-weight: 600; font-size: 1.15rem;">
+                    <i class="fas fa-edit me-2"></i> Survey Information
+                </h5>
+            </div>
+            <div class="card-body" style="padding: 2rem 2.5rem;">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-5">
+                        <label for="{{ form.title.id_for_label }}" class="form-label mb-3" style="color: #003049; font-weight: 600; font-size: 1rem;">
+                            <i class="fas fa-heading me-2" style="color: #669BBC;"></i> Survey Title <span style="color: #C1121F;">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="alert alert-danger mt-2 p-2">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ form.title.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="{{ form.description.id_for_label }}" class="form-label mb-3" style="color: #003049; font-weight: 600; font-size: 1rem;">
+                            <i class="fas fa-align-left me-2" style="color: #669BBC;"></i> Description <span style="color: #C1121F;">*</span>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="alert alert-danger mt-2 p-2">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ form.description.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="{{ form.open_time.id_for_label }}" class="form-label mb-3" style="color: #003049; font-weight: 600; font-size: 1rem;">
+                            <i class="fas fa-door-open me-2" style="color: #10b981;"></i> Open Time <span style="color: #6b7280; font-weight: 400;">(Optional)</span>
+                        </label>
+                        {{ form.open_time }}
+                        <div class="mt-2 p-3 rounded" style="background: #f0fdf4; border-left: 4px solid #10b981;">
+                            <i class="fas fa-info-circle me-2" style="color: #10b981;"></i>
+                            <small style="color: #065f46;">Set when the survey opens for students. If not set, the survey opens immediately when published.</small>
+                        </div>
+                        {% if form.open_time.errors %}
+                            <div class="alert alert-danger mt-2 p-2">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ form.open_time.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="{{ form.due_date.id_for_label }}" class="form-label mb-3" style="color: #003049; font-weight: 600; font-size: 1rem;">
+                            <i class="fas fa-calendar-alt me-2" style="color: #C1121F;"></i> Due Date <span style="color: #C1121F;">*</span>
+                        </label>
+                        {{ form.due_date }}
+                        {% if form.due_date.errors %}
+                            <div class="alert alert-danger mt-2 p-2">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ form.due_date.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="{{ form.time_limit_minutes.id_for_label }}" class="form-label mb-3" style="color: #003049; font-weight: 600; font-size: 1rem;">
+                            <i class="fas fa-clock me-2" style="color: #f59e0b;"></i> Time Limit (Minutes) <span style="color: #6b7280; font-weight: 400;">(Optional)</span>
+                        </label>
+                        {{ form.time_limit_minutes }}
+                        <div class="mt-2 p-3 rounded" style="background: #fffbeb; border-left: 4px solid #f59e0b;">
+                            <i class="fas fa-info-circle me-2" style="color: #f59e0b;"></i>
+                            <small style="color: #92400e;">Leave blank for no time limit. Minimum of 1 minute.</small>
+                        </div>
+                        {% if form.time_limit_minutes.errors %}
+                            <div class="alert alert-danger mt-2 p-2">
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ form.time_limit_minutes.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-4 mt-4" style="border-top: 2px solid #e5e7eb;">
+                        <a href="{% url 'manage_surveys' %}" class="btn btn-lg" style="background: white; color: #6b7280; border: 2px solid #d1d5db; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 500;">
+                            <i class="fas fa-arrow-left me-2"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-lg" style="background: #003049; color: white; border: none; padding: 0.75rem 2.5rem; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(0, 48, 73, 0.2);">
+                            <i class="fas fa-save me-2"></i> Create Survey
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card sticky-top" style="top: 2rem; border: 2px solid #e5e7eb; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 48, 73, 0.08);">
+            <div class="card-header" style="background: #780000; border-bottom: none; border-radius: 10px 10px 0 0; padding: 1.25rem 1.5rem;">
+                <h5 class="mb-0" style="color: white; font-weight: 600; font-size: 1.15rem;">
+                    <i class="fas fa-lightbulb me-2"></i> Tips & Guidelines
+                </h5>
+            </div>
+            <div class="card-body" style="padding: 1.5rem;">
+                <div class="mb-3 p-3 rounded" style="background: #f0fdf4; border-left: 4px solid #10b981;">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-check-circle me-3 mt-1" style="color: #10b981; font-size: 1.25rem;"></i>
+                        <div>
+                            <strong style="color: #065f46; font-size: 0.95rem;">Clear Title</strong>
+                            <p class="mb-0" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.25rem;">Choose a descriptive and concise title that clearly indicates the survey's purpose.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3 p-3 rounded" style="background: #dbeafe; border-left: 4px solid #669BBC;">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-check-circle me-3 mt-1" style="color: #669BBC; font-size: 1.25rem;"></i>
+                        <div>
+                            <strong style="color: #003049; font-size: 0.95rem;">Helpful Description</strong>
+                            <p class="mb-0" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.25rem;">Provide context and instructions to help students understand the survey's purpose.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3 p-3 rounded" style="background: #fee2e2; border-left: 4px solid #C1121F;">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-check-circle me-3 mt-1" style="color: #C1121F; font-size: 1.25rem;"></i>
+                        <div>
+                            <strong style="color: #991b1b; font-size: 0.95rem;">Appropriate Deadline</strong>
+                            <p class="mb-0" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.25rem;">Set a reasonable due date that gives students enough time to complete the survey.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 rounded" style="background: #FDF0D5; border: 2px solid #669BBC;">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle me-3" style="color: #003049; font-size: 1.25rem;"></i>
+                        <div>
+                            <strong style="color: #003049; font-size: 0.95rem;">Next Steps:</strong>
+                            <p class="mb-0" style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem;">After creating the survey, you'll be able to add questions, assign sections, and publish it to students.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

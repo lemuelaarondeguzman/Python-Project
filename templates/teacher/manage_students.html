@@ -1,0 +1,361 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Manage Students - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="fas fa-user-graduate"></i> Manage Students</h2>
+    <p class="text-muted">View and manage sections and students.</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card text-white shadow-sm" style="background: #669BBC; border: none; border-radius: 12px;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ total_students }}</h3>
+                        <p class="mb-0" style="font-size: 0.875rem; color: rgba(255,255,255,0.9);">Total Students</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-users fa-3x" style="color: rgba(255,255,255,0.25);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card text-white shadow-sm" style="background: #10b981; border: none; border-radius: 12px;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ active_students }}</h3>
+                        <p class="mb-0" style="font-size: 0.875rem; color: rgba(255,255,255,0.9);">Active Students</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle fa-3x" style="color: rgba(255,255,255,0.25);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card stats-card text-white shadow-sm" style="background: #C1121F; border: none; border-radius: 12px;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ inactive_students }}</h3>
+                        <p class="mb-0" style="font-size: 0.875rem; color: rgba(255,255,255,0.9);">Inactive Students</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-ban fa-3x" style="color: rgba(255,255,255,0.25);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <label class="form-label">Search Sections</label>
+                <input type="text" class="form-control" name="search" 
+                       placeholder="Search by section name or description..." 
+                       value="{{ search_query }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn w-100" style="background: #003049; color: white; border: none; padding: 0.625rem 1rem; border-radius: 8px;">
+                    <i class="fas fa-search me-2"></i> Filter
+                </button>
+            </div>
+        </form>
+        {% if search_query %}
+        <div class="mt-2">
+            <a href="{% url 'manage_students' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-times"></i> Clear Filters
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Sections List -->
+<div class="card">
+    <div class="card-header" style="background: white; border-bottom: 2px solid #e5e7eb;">
+        <h5 class="mb-0" style="color: #003049;">
+            <i class="fas fa-chalkboard me-2" style="color: #669BBC;"></i> Sections
+            <span class="badge" style="background: #669BBC; font-size: 0.75rem; margin-left: 0.5rem;">{{ page_obj.paginator.count }} total</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="row">
+                {% for section_item in page_obj %}
+                {% with section=section_item %}
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm h-100" style="border: 2px solid #669BBC; border-radius: 8px;">
+                        <div class="card-header text-white" style="background: #669BBC; border-bottom: none;">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chalkboard me-2"></i> {{ section.name }}
+                                <span class="badge ms-2" style="background: white; color: #003049; font-size: 0.75rem;">{{ section.student_count }} student{{ section.student_count|pluralize }}</span>
+                            </h5>
+                            {% if section.description %}
+                            <small style="color: rgba(255,255,255,0.85);">{{ section.description }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="mb-0 text-muted">
+                                        <i class="fas fa-users me-1"></i> {{ section.student_count }} student{{ section.student_count|pluralize }}
+                                    </p>
+                                </div>
+                                <button class="btn btn-sm btn-primary view-section-details-btn" 
+                                        data-section-id="{{ section.id }}"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#sectionStudentsModal">
+                                    <i class="fas fa-eye me-1"></i> View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chalkboard fa-4x text-muted mb-3"></i>
+            <h5>No Sections Found</h5>
+            <p class="text-muted">
+                {% if search_query %}
+                    Try adjusting your search criteria.
+                {% else %}
+                    No sections have been created yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Section Students Modal -->
+<div class="modal fade" id="sectionStudentsModal" tabindex="-1" aria-labelledby="sectionStudentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content" style="border: 2px solid #e5e7eb;">
+            <div class="modal-header" style="background-color: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                <h5 class="modal-title" id="sectionStudentsModalLabel">
+                    <i class="fas fa-users"></i> Section Students
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3" id="sectionStudentsContent" style="border-top: 1px solid #f3f4f6;">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const viewDetailsButtons = document.querySelectorAll('.view-section-details-btn');
+    const modal = document.getElementById('sectionStudentsModal');
+    const modalContent = document.getElementById('sectionStudentsContent');
+    const modalTitle = document.getElementById('sectionStudentsModalLabel');
+    
+    let currentSectionId = null;
+    let currentPage = 1;
+    
+    function loadSectionStudents(sectionId, page = 1, search = '', status = '') {
+        currentSectionId = sectionId;
+        currentPage = page;
+        
+        const url = `/teacher/sections/${sectionId}/students/?page=${page}${search ? '&search=' + encodeURIComponent(search) : ''}${status ? '&status=' + encodeURIComponent(status) : ''}`;
+        
+        modalContent.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    modalContent.innerHTML = '<div class="alert alert-danger">' + data.error + '</div>';
+                    return;
+                }
+                
+                let html = '<div class="mb-3 p-3 rounded" style="background-color: #f9fafb; border: 1px solid #e5e7eb;">';
+                html += '<h6 class="text-muted mb-2" style="border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;">Section: <strong>' + escapeHtml(data.section.name) + '</strong></h6>';
+                if (data.section.description) {
+                    html += '<p class="text-muted small mb-0 mt-2">' + escapeHtml(data.section.description) + '</p>';
+                }
+                html += '</div>';
+                
+                // Search and filter form
+                html += '<div class="card mb-3" style="border: 1px solid #e5e7eb;">';
+                html += '<div class="card-body p-3" style="border-bottom: 1px solid #e5e7eb;">';
+                html += '<form id="sectionStudentsFilterForm" class="row g-2 align-items-end">';
+                html += '<div class="col-md-6">';
+                html += '<label class="form-label small fw-semibold mb-1">Search Students</label>';
+                html += '<input type="text" class="form-control" name="search" placeholder="Search students..." value="' + escapeHtml(data.search_query || '') + '" style="border: 1px solid #d1d5db;">';
+                html += '</div>';
+                html += '<div class="col-md-3">';
+                html += '<label class="form-label small fw-semibold mb-1">Status</label>';
+                html += '<select class="form-select" name="status" style="border: 1px solid #d1d5db;">';
+                html += '<option value="">All Status</option>';
+                html += '<option value="active"' + (data.status_filter === 'active' ? ' selected' : '') + '>Active</option>';
+                html += '<option value="inactive"' + (data.status_filter === 'inactive' ? ' selected' : '') + '>Inactive</option>';
+                html += '</select>';
+                html += '</div>';
+                html += '<div class="col-md-3">';
+                html += '<button type="submit" class="btn btn-primary w-100"><i class="fas fa-search me-1"></i> Filter</button>';
+                html += '</div>';
+                html += '</form>';
+                html += '</div>';
+                html += '</div>';
+                
+                // Students table
+                if (data.students.length > 0) {
+                    html += '<div class="table-responsive" style="border: 1px solid #e5e7eb; border-radius: 0.375rem;">';
+                    html += '<table class="table table-hover mb-0">';
+                    html += '<thead style="background-color: #f9fafb; border-bottom: 2px solid #e5e7eb;"><tr>';
+                    html += '<th style="border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">Name</th>';
+                    html += '<th style="border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">Username</th>';
+                    html += '<th style="border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">Email</th>';
+                    html += '<th style="border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">Status</th>';
+                    html += '<th style="border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">Registered</th>';
+                    html += '<th style="border-bottom: 1px solid #e5e7eb;">Actions</th>';
+                    html += '</tr></thead>';
+                    html += '<tbody>';
+                    
+                    data.students.forEach(function(student, index) {
+                        const isLast = index === data.students.length - 1;
+                        html += '<tr style="border-bottom: ' + (isLast ? 'none' : '1px solid #f3f4f6') + ';">';
+                        html += '<td style="border-right: 1px solid #f3f4f6;"><strong>' + escapeHtml(student.name) + '</strong></td>';
+                        html += '<td style="border-right: 1px solid #f3f4f6;"><small class="text-muted">' + escapeHtml(student.username) + '</small></td>';
+                        html += '<td style="border-right: 1px solid #f3f4f6;">' + escapeHtml(student.email) + '</td>';
+                        html += '<td style="border-right: 1px solid #f3f4f6;"><span class="badge bg-' + (student.status === 'active' ? 'success' : 'secondary') + '" style="border: 1px solid ' + (student.status === 'active' ? '#10b981' : '#6b7280') + ';">' + escapeHtml(student.status) + '</span></td>';
+                        html += '<td style="border-right: 1px solid #f3f4f6;"><small class="text-muted">' + escapeHtml(student.date_joined) + '</small></td>';
+                        html += '<td>';
+                        html += '<a href="/teacher/students/' + student.id + '/edit/" class="btn btn-sm btn-outline-primary" title="Edit" style="border: 1px solid #3b82f6;"><i class="fas fa-edit"></i></a>';
+                        html += '</td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '</tbody></table></div>';
+                    
+                    // Pagination
+                    if (data.pagination.total_pages > 1) {
+                        html += '<nav aria-label="Page navigation" class="mt-3 p-2 rounded" style="background-color: #f9fafb; border: 1px solid #e5e7eb;">';
+                        html += '<ul class="pagination justify-content-center mb-0">';
+                        
+                        if (data.pagination.has_previous) {
+                            html += '<li class="page-item"><a class="page-link" href="#" onclick="loadSectionStudentsPage(' + data.section.id + ', 1); return false;" style="border: 1px solid #d1d5db;">First</a></li>';
+                            html += '<li class="page-item"><a class="page-link" href="#" onclick="loadSectionStudentsPage(' + data.section.id + ', ' + (data.pagination.current_page - 1) + '); return false;" style="border: 1px solid #d1d5db;">Previous</a></li>';
+                        }
+                        
+                        html += '<li class="page-item active"><span class="page-link" style="border: 1px solid #3b82f6;">' + data.pagination.current_page + ' of ' + data.pagination.total_pages + '</span></li>';
+                        
+                        if (data.pagination.has_next) {
+                            html += '<li class="page-item"><a class="page-link" href="#" onclick="loadSectionStudentsPage(' + data.section.id + ', ' + (data.pagination.current_page + 1) + '); return false;" style="border: 1px solid #d1d5db;">Next</a></li>';
+                            html += '<li class="page-item"><a class="page-link" href="#" onclick="loadSectionStudentsPage(' + data.section.id + ', ' + data.pagination.total_pages + '); return false;" style="border: 1px solid #d1d5db;">Last</a></li>';
+                        }
+                        
+                        html += '</ul></nav>';
+                    }
+                } else {
+                    html += '<div class="alert alert-info p-3 rounded" style="border: 1px solid #bfdbfe; background-color: #dbeafe;">No students found in this section.</div>';
+                }
+                
+                modalContent.innerHTML = html;
+                
+                // Add filter form handler
+                const filterForm = document.getElementById('sectionStudentsFilterForm');
+                if (filterForm) {
+                    filterForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const formData = new FormData(this);
+                        loadSectionStudents(data.section.id, 1, formData.get('search') || '', formData.get('status') || '');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modalContent.innerHTML = '<div class="alert alert-danger">An error occurred while loading students.</div>';
+            });
+    }
+    
+    // Make function available globally for pagination links
+    window.loadSectionStudentsPage = function(sectionId, page) {
+        const form = document.getElementById('sectionStudentsFilterForm');
+        if (form) {
+            const formData = new FormData(form);
+            loadSectionStudents(sectionId, page, formData.get('search') || '', formData.get('status') || '');
+        } else {
+            loadSectionStudents(sectionId, page);
+        }
+    };
+    
+    viewDetailsButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const sectionId = this.getAttribute('data-section-id');
+            loadSectionStudents(sectionId, 1);
+        });
+    });
+    
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text ? String(text).replace(/[&<>"']/g, m => map[m]) : '';
+    }
+    
+    // Clear modal content when modal is hidden
+    modal.addEventListener('hidden.bs.modal', function() {
+        modalContent.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        currentSectionId = null;
+        currentPage = 1;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'teacher/teacher_base.html' %}
+
+{% block title %}Set Due Dates - Survey System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2><i class="fas fa-calendar-alt"></i> Set Due Dates</h2>
+        <p class="text-muted mb-0">Manage survey deadlines and schedules</p>
+    </div>
+    <a href="{% url 'teacher_settings' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Settings
+    </a>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Search surveys..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                    <option value="unpublished" {% if status_filter == 'unpublished' %}selected{% endif %}>Unpublished</option>
+                    <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if surveys %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list"></i> Surveys
+            <span class="badge bg-primary">{{ surveys|length }} survey{{ surveys|length|pluralize }}</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Survey Title</th>
+                        <th>Status</th>
+                        <th>Open Time</th>
+                        <th>Due Date</th>
+                        <th>Time Limit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for survey in surveys %}
+                    <tr>
+                        <td>
+                            <strong>{{ survey.title }}</strong>
+                            {% if survey.description %}
+                            <br><small class="text-muted">{{ survey.description|truncatewords:10 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if survey.is_archived %}
+                                <span class="badge bg-secondary">Archived</span>
+                            {% elif survey.is_published %}
+                                <span class="badge bg-success">Published</span>
+                            {% else %}
+                                <span class="badge bg-warning">Unpublished</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if survey.open_time %}
+                                {{ survey.open_time|date:"M d, Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">Immediate</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ survey.due_date|date:"M d, Y H:i" }}</strong>
+                            {% if survey.due_date < current_time %}
+                                <br><small class="text-danger">Past due</small>
+                            {% elif survey.is_open %}
+                                <br><small class="text-success">Open</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if survey.time_limit_minutes %}
+                                {{ survey.time_limit_minutes }} min
+                            {% else %}
+                                <span class="text-muted">No limit</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'update_survey_due_date' survey.id %}" class="btn btn-sm btn-primary" title="Update Due Date">
+                                <i class="fas fa-edit"></i> Update
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-calendar-alt fa-4x text-muted mb-3"></i>
+        <h5>No surveys found</h5>
+        <p class="text-muted">
+            {% if search_query or status_filter %}
+                No surveys match your search criteria. Try adjusting your filters.
+            {% else %}
+                You haven't created any surveys yet. Create your first survey to set due dates!
+            {% endif %}
+        </p>
+        {% if not search_query and not status_filter %}
+        <a href="{% url 'survey_builder' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create Your First Survey
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
