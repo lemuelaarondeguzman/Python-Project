@@ -4,50 +4,61 @@
 
 {% block content %}
 <div class="page-header">
-    <h2><i class="fas fa-edit"></i> Survey Builder</h2>
-    <p class="text-muted">Create, edit, and manage your surveys.</p>
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h2><i class="fas fa-edit"></i> Survey Builder</h2>
+            <p class="text-muted mb-0">Create, edit, and manage your surveys.</p>
+        </div>
+        <div class="mt-3 mt-md-0">
+            <a href="{% url 'survey_builder' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle"></i> Create New Survey
+            </a>
+        </div>
+    </div>
 </div>
 
-<!-- Survey Management Section -->
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">
+<!-- Enhanced Survey Management Section -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-bottom: 2px solid #e5e7eb;">
+        <h5 class="mb-0 fw-bold text-gray-900">
             <i class="fas fa-list"></i> All Surveys
         </h5>
-        <a href="{% url 'survey_builder' %}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Create New Survey
-        </a>
     </div>
-    <div class="card-body">
-        <form method="get" class="row g-3 align-items-end mb-3">
-            <div class="col-md-6">
-                <label for="search-input" class="form-label fw-semibold">Search by Title</label>
-                <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}" class="form-control" placeholder="Enter survey title...">
-            </div>
-            <div class="col-md-3">
-                <label for="status-filter" class="form-label fw-semibold">Status</label>
-                <select id="status-filter" name="status" class="form-select">
-                    <option value="" {% if not status_filter %}selected{% endif %}>All</option>
-                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
-                    <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
-                    <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label d-block opacity-0">Actions</label>
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary flex-grow-1">
-                        <i class="fas fa-search"></i> Apply
-                    </button>
-                    <a href="{% url 'manage_surveys' %}" class="btn btn-outline-secondary flex-grow-1">
-                        Reset
-                    </a>
-                    <a href="{% url 'archived_surveys' %}" class="btn btn-outline-info">
-                        <i class="fas fa-archive"></i> Archived
-                    </a>
+    <div class="card-body p-4">
+        <!-- Enhanced Search & Filter Section -->
+        <div class="search-filter-section mb-4 p-4 rounded-lg" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border: 2px solid #e5e7eb;">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-lg-5 col-md-12">
+                    <label for="search-input" class="form-label fw-semibold text-gray-700">
+                        <i class="fas fa-search text-primary me-1"></i> Search by Title
+                    </label>
+                    <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}" 
+                           class="form-control form-control-lg" placeholder="Enter survey title..." 
+                           style="border: 2px solid #e5e7eb;">
                 </div>
-            </div>
-        </form>
+                <div class="col-lg-3 col-md-6">
+                    <label for="status-filter" class="form-label fw-semibold text-gray-700">
+                        <i class="fas fa-filter text-primary me-1"></i> Status
+                    </label>
+                    <select id="status-filter" name="status" class="form-select form-select-lg" style="border: 2px solid #e5e7eb;">
+                        <option value="" {% if not status_filter %}selected{% endif %}>All</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                    </select>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                            <i class="fas fa-search"></i> Apply
+                        </button>
+                        <a href="{% url 'manage_surveys' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-redo"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
         {% if surveys %}
         <div class="table-responsive">
             <table class="table table-hover">
@@ -70,19 +81,33 @@
                         <td class="survey-status-cell">
                             {% if survey.is_published %}
                                 {% if survey.is_open %}
-                                    <span class="badge bg-success status-badge">Active</span>
-                                    <small class="text-muted d-block status-detail">Until {{ survey.due_date|date:"M d, Y h:i A" }}</small>
+                                    <span class="status-badge published" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.8125rem; background-color: #d1fae5; color: #065f46; border: 2px solid #10b981;">
+                                        <i class="fas fa-check-circle"></i> Active
+                                    </span>
+                                    <small class="text-muted d-block mt-1 status-detail">
+                                        <i class="fas fa-clock me-1"></i>Until {{ survey.due_date|date:"M d, Y h:i A" }}
+                                    </small>
                                 {% else %}
-                                    <span class="badge bg-danger status-badge">Closed</span>
-                                    <small class="text-muted d-block status-detail">Closed {{ survey.due_date|date:"M d, Y h:i A" }}</small>
+                                    <span class="status-badge closed" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.8125rem; background-color: #fee2e2; color: #991b1b; border: 2px solid #ef4444;">
+                                        <i class="fas fa-lock"></i> Closed
+                                    </span>
+                                    <small class="text-muted d-block mt-1 status-detail">
+                                        <i class="fas fa-calendar-times me-1"></i>{{ survey.due_date|date:"M d, Y h:i A" }}
+                                    </small>
                                 {% endif %}
                             {% else %}
-                                <span class="badge bg-secondary text-dark status-badge">Draft</span>
-                                <small class="text-muted d-block status-detail">Publish to share with students</small>
+                                <span class="status-badge draft" style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.8125rem; background-color: #fef3c7; color: #92400e; border: 2px solid #f59e0b;">
+                                    <i class="fas fa-file-alt"></i> Draft
+                                </span>
+                                <small class="text-muted d-block mt-1 status-detail">
+                                    <i class="fas fa-info-circle me-1"></i>Not visible to students
+                                </small>
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge bg-info">{{ survey.responses.count }}</span>
+                            <span class="badge bg-gradient" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.5rem 0.75rem; font-size: 0.875rem; font-weight: 600;">
+                                <i class="fas fa-users me-1"></i>{{ survey.responses.count }}
+                            </span>
                         </td>
                         <td>
                             <div class="d-flex gap-1 align-items-center flex-wrap">

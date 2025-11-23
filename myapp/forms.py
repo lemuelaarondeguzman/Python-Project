@@ -54,20 +54,33 @@ class SurveyForm(forms.ModelForm):
         model = Survey
         fields = ['title', 'description', 'open_time', 'due_date', 'time_limit_minutes']
         widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter survey title...',
+                'style': 'border: 2px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1rem; font-size: 1rem;'
+            }),
+            'description': forms.Textarea(attrs={
+                'rows': 4,
+                'class': 'form-control',
+                'placeholder': 'Describe the purpose and instructions for this survey...',
+                'style': 'border: 2px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1rem; font-size: 1rem; resize: vertical;'
+            }),
             'open_time': forms.DateTimeInput(attrs={
                 'type': 'datetime-local',
-                'class': 'form-control'
+                'class': 'form-control',
+                'style': 'border: 2px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1rem; font-size: 1rem;'
             }),
             'due_date': forms.DateTimeInput(attrs={
                 'type': 'datetime-local',
-                'class': 'form-control'
+                'class': 'form-control',
+                'style': 'border: 2px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1rem; font-size: 1rem;'
             }),
             'time_limit_minutes': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': 1,
-                'placeholder': 'e.g., 30'
+                'placeholder': 'e.g., 30',
+                'style': 'border: 2px solid #e5e7eb; border-radius: 8px; padding: 0.75rem 1rem; font-size: 1rem;'
             }),
-            'description': forms.Textarea(attrs={'rows': 3}),
         }
     
     def clean_open_time(self):

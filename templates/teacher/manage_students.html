@@ -11,45 +11,45 @@
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-md-4 mb-3">
-        <div class="card stats-card bg-primary text-white">
-            <div class="card-body">
+        <div class="card stats-card text-white shadow-sm" style="background: #669BBC; border: none; border-radius: 12px;">
+            <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3 class="mb-0">{{ total_students }}</h3>
-                        <p class="mb-0">Total Students</p>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ total_students }}</h3>
+                        <p class="mb-0" style="font-size: 0.875rem; color: rgba(255,255,255,0.9);">Total Students</p>
                     </div>
                     <div>
-                        <i class="fas fa-users fa-3x opacity-50"></i>
+                        <i class="fas fa-users fa-3x" style="color: rgba(255,255,255,0.25);"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-3">
-        <div class="card stats-card bg-success text-white">
-            <div class="card-body">
+        <div class="card stats-card text-white shadow-sm" style="background: #10b981; border: none; border-radius: 12px;">
+            <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3 class="mb-0">{{ active_students }}</h3>
-                        <p class="mb-0">Active Students</p>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ active_students }}</h3>
+                        <p class="mb-0" style="font-size: 0.875rem; color: rgba(255,255,255,0.9);">Active Students</p>
                     </div>
                     <div>
-                        <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                        <i class="fas fa-check-circle fa-3x" style="color: rgba(255,255,255,0.25);"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-3">
-        <div class="card stats-card bg-danger text-white">
-            <div class="card-body">
+        <div class="card stats-card text-white shadow-sm" style="background: #C1121F; border: none; border-radius: 12px;">
+            <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3 class="mb-0">{{ inactive_students }}</h3>
-                        <p class="mb-0">Inactive Students</p>
+                        <h3 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ inactive_students }}</h3>
+                        <p class="mb-0" style="font-size: 0.875rem; color: rgba(255,255,255,0.9);">Inactive Students</p>
                     </div>
                     <div>
-                        <i class="fas fa-ban fa-3x opacity-50"></i>
+                        <i class="fas fa-ban fa-3x" style="color: rgba(255,255,255,0.25);"></i>
                     </div>
                 </div>
             </div>
@@ -87,8 +87,8 @@
                 </select>
             </div>
             <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-search"></i> Filter
+                <button type="submit" class="btn w-100" style="background: #003049; color: white; border: none; padding: 0.625rem 1rem; border-radius: 8px;">
+                    <i class="fas fa-search me-2"></i> Filter
                 </button>
             </div>
         </form>
@@ -104,24 +104,24 @@
 
 <!-- Students Grouped by Section -->
 <div class="card">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="fas fa-list"></i> Students (Grouped by Section)
-            <span class="badge bg-primary">{{ total_students }} total</span>
+    <div class="card-header" style="background: white; border-bottom: 2px solid #e5e7eb;">
+        <h5 class="mb-0" style="color: #003049;">
+            <i class="fas fa-list me-2" style="color: #669BBC;"></i> Students (Grouped by Section)
+            <span class="badge" style="background: #669BBC; font-size: 0.75rem; margin-left: 0.5rem;">{{ total_students }} total</span>
         </h5>
     </div>
     <div class="card-body">
         {% if students_by_section or students_without_section %}
             <!-- Students by Section -->
             {% for section_id, section_data in students_by_section.items %}
-            <div class="card mb-4 border-primary">
-                <div class="card-header bg-primary text-white">
+            <div class="card mb-4 shadow-sm" style="border: 2px solid #669BBC; border-radius: 8px;">
+                <div class="card-header text-white" style="background: #669BBC; border-bottom: none;">
                     <h5 class="mb-0">
-                        <i class="fas fa-chalkboard"></i> {{ section_data.section.name }}
-                        <span class="badge bg-light text-dark ms-2">{{ section_data.students|length }} student{{ section_data.students|length|pluralize }}</span>
+                        <i class="fas fa-chalkboard me-2"></i> {{ section_data.section.name }}
+                        <span class="badge ms-2" style="background: white; color: #003049; font-size: 0.75rem;">{{ section_data.students|length }} student{{ section_data.students|length|pluralize }}</span>
                     </h5>
                     {% if section_data.section.description %}
-                    <small class="text-white-50">{{ section_data.section.description }}</small>
+                    <small style="color: rgba(255,255,255,0.85);">{{ section_data.section.description }}</small>
                     {% endif %}
                 </div>
                 <div class="card-body">
@@ -140,25 +140,26 @@
                             <tbody>
                                 {% for student in section_data.students %}
                                 <tr>
-                                    <td><strong>{{ student.first_name }} {{ student.last_name }}</strong></td>
-                                    <td><small class="text-muted">{{ student.username }}</small></td>
-                                    <td>{{ student.email }}</td>
+                                    <td><strong style="color: #003049;">{{ student.first_name }} {{ student.last_name }}</strong></td>
+                                    <td><small style="color: #6b7280;">{{ student.username }}</small></td>
+                                    <td style="color: #003049;">{{ student.email }}</td>
                                     <td>
                                         {% if student.is_active %}
-                                            <span class="badge bg-success">Active</span>
+                                            <span class="badge" style="background: #10b981; color: white;">Active</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">Inactive</span>
+                                            <span class="badge" style="background: #6b7280; color: white;">Inactive</span>
                                         {% endif %}
                                     </td>
-                                    <td><small>{{ student.date_joined|date:"M d, Y" }}</small></td>
+                                    <td><small style="color: #6b7280;">{{ student.date_joined|date:"M d, Y" }}</small></td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <a href="{% url 'edit_student' student.id %}" class="btn btn-sm" style="background: white; color: #003049; border: 2px solid #669BBC;" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <form method="post" action="{% url 'toggle_student_access' student.id %}" class="d-inline">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm {% if student.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" 
+                                                <button type="submit" class="btn btn-sm" 
+                                                        style="background: {% if student.is_active %}#FDF0D5{% else %}#10b981{% endif %}; color: {% if student.is_active %}#003049{% else %}white{% endif %}; border: 2px solid {% if student.is_active %}#669BBC{% else %}#10b981{% endif %};"
                                                         title="{% if student.is_active %}Set Inactive{% else %}Activate{% endif %}"
                                                         onclick="return confirm('{% if student.is_active %}Mark this student as inactive?{% else %}Activate this student?{% endif %}');">
                                                     <i class="fas fa-{% if student.is_active %}pause-circle{% else %}play-circle{% endif %}"></i>
@@ -177,11 +178,8 @@
             
             <!-- Students without Section -->
             {% if students_without_section %}
-            <div class="card mb-4 border-warning">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="mb-0">
-                        <i class="fas fa-user-slash"></i> No Section Assigned
-                        <span class="badge bg-dark ms-2">{{ students_without_section|length }} student{{ students_without_section|length|pluralize }}</span>
+            <div class="card mb-4 shadow-sm" style="border: 2px solid #FDF0D5; border-radius: 8px;">
+                <div class="card-header\" style=\"background: #FDF0D5; border-bottom: none;\">\n                    <h5 class=\"mb-0\" style=\"color: #003049;\">\n                        <i class=\"fas fa-user-slash me-2\" style=\"color: #669BBC;\"></i> No Section Assigned\n                        <span class=\"badge ms-2\" style=\"background: #003049; color: white; font-size: 0.75rem;\">{{ students_without_section|length }} student{{ students_without_section|length|pluralize }}</span>
                     </h5>
                 </div>
                 <div class="card-body">
@@ -200,25 +198,26 @@
                             <tbody>
                                 {% for student in students_without_section %}
                                 <tr>
-                                    <td><strong>{{ student.first_name }} {{ student.last_name }}</strong></td>
-                                    <td><small class="text-muted">{{ student.username }}</small></td>
-                                    <td>{{ student.email }}</td>
+                                    <td><strong style="color: #003049;">{{ student.first_name }} {{ student.last_name }}</strong></td>
+                                    <td><small style="color: #6b7280;">{{ student.username }}</small></td>
+                                    <td style="color: #003049;">{{ student.email }}</td>
                                     <td>
                                         {% if student.is_active %}
-                                            <span class="badge bg-success">Active</span>
+                                            <span class="badge" style="background: #10b981; color: white;">Active</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">Inactive</span>
+                                            <span class="badge" style="background: #6b7280; color: white;">Inactive</span>
                                         {% endif %}
                                     </td>
-                                    <td><small>{{ student.date_joined|date:"M d, Y" }}</small></td>
+                                    <td><small style="color: #6b7280;">{{ student.date_joined|date:"M d, Y" }}</small></td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <a href="{% url 'edit_student' student.id %}" class="btn btn-sm" style="background: white; color: #003049; border: 2px solid #669BBC;" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <form method="post" action="{% url 'toggle_student_access' student.id %}" class="d-inline">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm {% if student.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" 
+                                                <button type="submit" class="btn btn-sm" 
+                                                        style="background: {% if student.is_active %}#FDF0D5{% else %}#10b981{% endif %}; color: {% if student.is_active %}#003049{% else %}white{% endif %}; border: 2px solid {% if student.is_active %}#669BBC{% else %}#10b981{% endif %};"
                                                         title="{% if student.is_active %}Set Inactive{% else %}Activate{% endif %}"
                                                         onclick="return confirm('{% if student.is_active %}Mark this student as inactive?{% else %}Activate this student?{% endif %}');">
                                                     <i class="fas fa-{% if student.is_active %}pause-circle{% else %}play-circle{% endif %}"></i>
